@@ -12,10 +12,10 @@ CREATE TABLE account (
 
 CREATE TABLE operation (
     operation_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    operation_type INT8 NOT NULL,
+    operation_type SMALLINT NOT NULL,
     account_id UUID NOT NULL REFERENCES account(account_id) ON DELETE RESTRICT,  -- Запрещаем удаление пользователя, если есть записи
     amount BIGINT NOT NULL,
-    source_type INT8 NOT NULL,
+    source_type SMALLINT NOT NULL,
     source_id UUID NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -54,7 +54,7 @@ CREATE INDEX idx_shop_purchase_item_id ON shop_purchase(item_id);
 
 CREATE TABLE coin_transfer (
     transfer_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    transfer_type INT8 NOT NULL,
+    transfer_type SMALLINT NOT NULL,
     owner_account_id UUID NOT NULL REFERENCES account(account_id) ON DELETE RESTRICT, -- Запрещаем удаление пользователя, если есть записи
     counterparty_account_id UUID NOT NULL REFERENCES account(account_id) ON DELETE RESTRICT, -- Запрещаем удаление пользователя, если есть записи
     amount BIGINT NOT NULL CHECK (amount > 0)
