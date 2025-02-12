@@ -13,10 +13,10 @@ import (
 var App = fx.Options(
 	fx.Provide(NewLogger),
 	fx.Provide(NewPgxv5),
-	fx.Invoke(func(lc fx.Lifecycle, shutdowner fx.Shutdowner, logger *slog.Logger, config config.Config, dbpool *pgxpool.Pool) {
+	fx.Invoke(func(lc fx.Lifecycle, logger *slog.Logger, config config.Config, dbpool *pgxpool.Pool) {
 		lc.Append(fx.Hook{
 			OnStart: func(ctx context.Context) error {
-				err := Pgxv5TestConnection(context.Background(), dbpool, logger, config.DB.MaxAttempt, config.DB.AttemptSleepSeconds)
+				err := Pgxv5TestConnection(ctx, dbpool, logger, config.DB.MaxAttempt, config.DB.AttemptSleepSeconds)
 				if err != nil {
 					return err
 				}

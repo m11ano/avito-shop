@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	cfg := config.LoadConfig()
 
 	app := fx.New(

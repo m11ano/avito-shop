@@ -11,7 +11,6 @@ import (
 )
 
 func NewPgxv5(lc fx.Lifecycle, logger *slog.Logger, config config.Config) *pgxpool.Pool {
-
 	ctx := context.Background()
 	dbpool, err := pgxpool.New(ctx, config.DB.URI)
 	if err != nil {

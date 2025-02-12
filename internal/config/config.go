@@ -19,6 +19,7 @@ type Config struct {
 }
 
 func LoadConfig() Config {
+	//
 	var Config Config
 
 	err := cleanenv.ReadConfig("config.yml", &Config)

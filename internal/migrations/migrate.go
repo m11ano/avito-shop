@@ -9,7 +9,7 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-func RunMigrations(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger) error {
+func RunMigrations(_ context.Context, pool *pgxpool.Pool, logger *slog.Logger) error {
 	if err := goose.SetDialect("postgres"); err != nil {
 		logger.Error("goose: unable to set dialect", slog.Any("error", err))
 		return err
