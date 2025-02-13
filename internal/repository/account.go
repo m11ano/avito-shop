@@ -8,7 +8,6 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
-	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -37,24 +36,22 @@ var (
 )
 
 func init() {
-	accountTableFields = dbhelper.ExtractDBFields(DBAccount{})
+	accountTableFields = dbhelper.ExtractDBFields(accountDBSchema)
 }
 
 type Account struct {
-	logger    *slog.Logger
-	db        *pgxpool.Pool
-	txc       *trmpgx.CtxGetter
-	qb        squirrel.StatementBuilderType
-	txManager *manager.Manager
+	logger *slog.Logger
+	db     *pgxpool.Pool
+	txc    *trmpgx.CtxGetter
+	qb     squirrel.StatementBuilderType
 }
 
-func NewAccount(logger *slog.Logger, db *pgxpool.Pool, txc *trmpgx.CtxGetter, txManager *manager.Manager) *Account {
+func NewAccount(logger *slog.Logger, db *pgxpool.Pool, txc *trmpgx.CtxGetter) *Account {
 	return &Account{
-		logger:    logger,
-		db:        db,
-		txc:       txc,
-		qb:        squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
-		txManager: txManager,
+		logger: logger,
+		db:     db,
+		txc:    txc,
+		qb:     squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
 	}
 }
 

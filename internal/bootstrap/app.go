@@ -29,6 +29,7 @@ var App = fx.Options(
 	fx.Provide(NewTXManager),
 	// Бизнес логика
 	AccountModule,
+	ShopItemModule,
 	// Delivery
 	DeliveryHTTP,
 	// Start && Stop invoke
