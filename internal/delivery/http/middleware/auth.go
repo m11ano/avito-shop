@@ -9,14 +9,14 @@ import (
 	"github.com/m11ano/avito-shop/internal/usecase"
 )
 
-func Auth(accountUsecase usecase.Account) func(*fiber.Ctx) error {
+func Auth(authUsecase usecase.Auth) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		isAuth := false
 
 		AuthorizationHeader := strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
 
 		if len(AuthorizationHeader) > 0 {
-			accountID, err := accountUsecase.AuthByJWTToken(c.Context(), AuthorizationHeader)
+			accountID, err := authUsecase.AuthByJWTToken(c.Context(), AuthorizationHeader)
 			if err != nil && !errors.Is(err, app.ErrUnauthorized) {
 				return err
 			}

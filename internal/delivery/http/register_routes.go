@@ -8,8 +8,8 @@ import (
 	"github.com/m11ano/avito-shop/internal/usecase"
 )
 
-func RegisterRoutes(app *fiber.App, config config.Config, ctrl *controller.Controller, accountUsecase usecase.Account) {
-	authMiddleware := middleware.Auth(accountUsecase)
+func RegisterRoutes(app *fiber.App, config config.Config, ctrl *controller.Controller, authUsecase usecase.Auth) {
+	authMiddleware := middleware.Auth(authUsecase)
 	rootGroup := app.Group(config.HTTP.Prefix, authMiddleware)
 
 	rootGroup.Post("/auth", ctrl.AuthHandler)

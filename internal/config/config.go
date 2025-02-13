@@ -23,9 +23,10 @@ type Config struct {
 		StopTimeout int    `yaml:"stop_timeout" env:"HTTP_STOP_TIMEOUT" env-default:"5"`
 		UnderProxy  bool   `yaml:"under_proxy" env:"HTTP_UNDER_PROXY" env-default:"false"`
 	}
-	Account struct {
-		JWTSecretKey string `yaml:"jwt_secret_key" env:"JWT_SECRET_KEY" env-default:""`
-		JWTTokenTTL  int64  `yaml:"jwt_token_ttl" env:"JWT_TOKEN_TTL" env-default:"3600"`
+	Auth struct {
+		JWTSecretKey     string `yaml:"jwt_secret_key" env:"AUTH_JWT_SECRET_KEY" env-default:""`
+		JWTTokenTTL      int64  `yaml:"jwt_token_ttl" env:"AUTH_JWT_TOKEN_TTL" env-default:"3600"`
+		NewAccountAmount int64  `yaml:"new_account_amount" env:"AUTH_NEW_ACCOUNT_AMOUNT" env-default:"0"`
 	}
 }
 

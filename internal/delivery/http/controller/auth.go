@@ -36,7 +36,7 @@ func (ctrl *Controller) AuthHandler(c *fiber.Ctx) error {
 		return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: errMsg}
 	}
 
-	jwtToken, err := ctrl.accountUsecase.SignInOrSignUp(c.Context(), in.Username, in.Password)
+	jwtToken, err := ctrl.usecaseAuth.SignInOrSignUp(c.Context(), in.Username, in.Password)
 	if err != nil {
 		if errors.Is(err, app.ErrInternal) {
 			return err

@@ -38,8 +38,10 @@ func (a *Account) VerifyPassword(password string) (bool, error) {
 // New account with text password, hash will be generated automatically
 func NewAccount(username string, password string) (*Account, error) {
 	account := &Account{
-		ID:       uuid.New(),
-		Username: username,
+		ID:        uuid.New(),
+		Username:  username,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	err := account.GeneretePasswordHash(password)
