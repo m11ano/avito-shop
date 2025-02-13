@@ -7,23 +7,14 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/m11ano/avito-shop/internal/config"
-	"go.uber.org/fx"
 )
 
-func NewPgxv5(lc fx.Lifecycle, logger *slog.Logger, config config.Config) *pgxpool.Pool {
+func NewPgxv5(config config.Config) *pgxpool.Pool {
 	ctx := context.Background()
 	dbpool, err := pgxpool.New(ctx, config.DB.URI)
 	if err != nil {
 		panic("unable to create pgxv5 connection pool")
 	}
-
-	lc.Append(fx.Hook{
-		OnStop: func(_ context.Context) error {
-			logger.Info("stopping Postgress")
-			dbpool.Close()
-			return nil
-		},
-	})
 
 	return dbpool
 }

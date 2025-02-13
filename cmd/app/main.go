@@ -13,8 +13,8 @@ func main() {
 
 	app := fx.New(
 		fx.Options(
-			fx.StartTimeout(time.Second*time.Duration(cfg.Fx.StartTimeout)),
-			fx.StopTimeout(time.Second*time.Duration(cfg.Fx.StopTimeout)),
+			fx.StartTimeout(time.Second*time.Duration(cfg.App.StartTimeout)),
+			fx.StopTimeout(time.Second*time.Duration(cfg.App.StopTimeout)),
 		),
 		fx.Provide(func() config.Config {
 			return cfg

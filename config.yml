@@ -1,4 +1,4 @@
-fx:
+app:
     start_timeout: 60
     stop_timeout: 10
 
@@ -6,3 +6,9 @@ db:
     uri: "postgres://postgres:123456@localhost:5433/avito-shop"
     max_attempts: 10
     attempt_sleep_seconds: 3
+
+http:
+    prefix: "api"
+    port: 8080
+    stop_timeout: 5
+    under_proxy: false
