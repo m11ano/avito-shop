@@ -27,6 +27,8 @@ type DBAccount struct {
 	ID           uuid.UUID `db:"account_id"`
 	Username     string    `db:"username"`
 	PasswordHash string    `db:"password_hash"`
+	CreatedAt    time.Time `db:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at"`
 }
 
 var (
@@ -61,6 +63,8 @@ func (r *Account) dbToDomain(db *DBAccount) *domain.Account {
 		ID:           db.ID,
 		Username:     db.Username,
 		PasswordHash: db.PasswordHash,
+		CreatedAt:    db.CreatedAt,
+		UpdatedAt:    db.UpdatedAt,
 	}
 }
 
@@ -104,6 +108,8 @@ func (r *Account) Create(ctx context.Context, item *domain.Account) error {
 		r.logger.ErrorContext(ctx, "convert struct to db map", slog.Any("error", err))
 		return app.NewErrorFrom(app.ErrInternal).Wrap(err)
 	}
+	dataMap["created_at"] = time.Now()
+	dataMap["updated_at"] = time.Now()
 
 	query, args, err := r.qb.Insert(accountTable).SetMap(dataMap).ToSql()
 	if err != nil {
@@ -135,6 +141,7 @@ func (r *Account) Update(ctx context.Context, item *domain.Account, id uuid.UUID
 		r.logger.ErrorContext(ctx, "convert struct to db map", slog.Any("error", err))
 		return app.NewErrorFrom(app.ErrInternal).Wrap(err)
 	}
+	delete(dataMap, "created_at")
 	dataMap["updated_at"] = time.Now()
 
 	query, args, err := r.qb.Update(accountTable).SetMap(dataMap).Where(squirrel.Eq{"id": id}).ToSql()

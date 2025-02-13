@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/m11ano/avito-shop/pkg/cryptopass"
 )
@@ -9,6 +11,8 @@ type Account struct {
 	ID           uuid.UUID
 	Username     string
 	PasswordHash string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 func (a *Account) GeneretePasswordHash(password string) error {
