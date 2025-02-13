@@ -10,12 +10,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/m11ano/avito-shop/internal/config"
-	"github.com/m11ano/avito-shop/internal/delivery/http"
 	"github.com/m11ano/avito-shop/internal/migrations"
 	"go.uber.org/fx"
 )
 
 var App = fx.Options(
+	// Инфраструктура
 	fx.Provide(NewLogger),
 	fx.Provide(NewPgxv5),
 	fx.Provide(func(config config.Config, logger *slog.Logger) *fiber.App {
@@ -26,6 +26,12 @@ var App = fx.Options(
 		}, logger)
 		return fiberApp
 	}),
+	fx.Provide(NewTXManager),
+	// Бизнес логика
+	AccountModule,
+	// Delivery
+	DeliveryHTTP,
+	// Start && Stop invoke
 	fx.Invoke(func(lc fx.Lifecycle, shutdowner fx.Shutdowner, logger *slog.Logger, config config.Config, dbpool *pgxpool.Pool, fiberApp *fiber.App) {
 		lc.Append(fx.Hook{
 			OnStart: func(ctx context.Context) error {
@@ -39,8 +45,6 @@ var App = fx.Options(
 				if err != nil {
 					return err
 				}
-
-				http.RegisterRoutes(fiberApp, config)
 
 				go func() {
 					if err := fiberApp.Listen(fmt.Sprintf(":%d", config.HTTP.Port)); err != nil {

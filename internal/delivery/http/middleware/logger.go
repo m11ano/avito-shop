@@ -50,7 +50,7 @@ func Logger(logger *slog.Logger) func(*fiber.Ctx) error {
 		} else {
 			logger.InfoContext(
 				c.Context(),
-				"http response: info",
+				"http response: success",
 				slog.Int("reponseCode", c.Response().StatusCode()),
 				slog.Any("request", logRequestData),
 			)

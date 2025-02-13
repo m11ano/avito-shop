@@ -27,6 +27,10 @@ func (a *Account) GeneretePasswordHash(password string) error {
 	return nil
 }
 
+func (a *Account) VerifyPassword(password string) (bool, error) {
+	return cryptopass.VerifyPasswordArgon2(password, a.PasswordHash)
+}
+
 // New account with text password, hash will be generated automatically
 func NewAccount(username string, password string) (*Account, error) {
 	account := &Account{
