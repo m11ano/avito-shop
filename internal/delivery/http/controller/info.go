@@ -7,7 +7,13 @@ import (
 )
 
 type InfoHandlerOut struct {
-	Coins int64 `json:"coins"`
+	Coins     int64                     `json:"coins"`
+	Inventory []InfoHandlerOutInventory `json:"inventory"`
+}
+
+type InfoHandlerOutInventory struct {
+	Type     string `json:"type"`
+	Quantity int64  `json:"quantity"`
 }
 
 func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error {
@@ -27,6 +33,22 @@ func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error {
 	out.Coins, _, err = ctrl.usecaseOperation.GetBalanceByAccountID(c.Context(), *accountID)
 	if err != nil {
 		return err
+	}
+
+	inventory, err := ctrl.usecaseShopPurchase.GetInventory(c.Context(), *accountID)
+	if err != nil {
+		return err
+	}
+
+	out.Inventory = make([]InfoHandlerOutInventory, 0, len(inventory))
+	for _, item := range inventory {
+		invItem := InfoHandlerOutInventory{
+			Quantity: item.Quantity,
+		}
+		if item.ShopItem != nil {
+			invItem.Type = item.ShopItem.Name
+		}
+		out.Inventory = append(out.Inventory, invItem)
 	}
 
 	return c.JSON(out)

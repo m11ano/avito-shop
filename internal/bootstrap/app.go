@@ -32,6 +32,7 @@ var App = fx.Options(
 	OperationModule,
 	AuthModule,
 	ShopItemModule,
+	ShopPurchaseModule,
 	// Delivery
 	DeliveryHTTP,
 	// Start && Stop invoke

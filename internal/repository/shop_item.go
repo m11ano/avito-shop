@@ -127,3 +127,40 @@ func (r *ShopItem) FindItemByName(ctx context.Context, name string) (*domain.Sho
 
 	return item, nil
 }
+
+func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domain.ShopItem, error) {
+	query, args, err := r.qb.Select(shopItemTableFields...).From(shopItemTable).Where(squirrel.Eq{"item_id": ids}).ToSql()
+	if err != nil {
+		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
+		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+	}
+
+	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "40001" {
+			return nil, app.NewErrorFrom(app.ErrTxСoncurrentExec).Wrap(err)
+		}
+		r.logger.ErrorContext(ctx, "executing query", "error", err)
+		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+	}
+
+	defer rows.Close()
+
+	result := make([]domain.ShopItem, 0)
+
+	for rows.Next() {
+		data := &DBShopItem{}
+		if err := pgxscan.ScanRow(data, rows); err != nil {
+			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+			return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		}
+		result = append(result, *r.dbToDomain(data))
+	}
+	if err := rows.Err(); err != nil {
+		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+	}
+
+	return result, nil
+}

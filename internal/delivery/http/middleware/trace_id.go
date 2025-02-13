@@ -11,9 +11,8 @@ func TraceID() func(*fiber.Ctx) error {
 		if err != nil {
 			requestID = uuid.New()
 		}
-		requestIDStr := requestID.String()
 
-		c.Locals("requestID", requestIDStr)
+		c.Locals("requestID", &requestID)
 
 		return c.Next()
 	}

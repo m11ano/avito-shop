@@ -6,15 +6,17 @@ import (
 )
 
 type Controller struct {
-	vldtr            *validator.Validate
-	usecaseAuth      usecase.Auth
-	usecaseOperation usecase.Operation
+	vldtr               *validator.Validate
+	usecaseAuth         usecase.Auth
+	usecaseOperation    usecase.Operation
+	usecaseShopPurchase usecase.ShopPurchase
 }
 
-func New(vldtr *validator.Validate, usecaseAuth usecase.Auth, usecaseOperation usecase.Operation) *Controller {
+func New(vldtr *validator.Validate, usecaseAuth usecase.Auth, usecaseOperation usecase.Operation, usecaseShopPurchase usecase.ShopPurchase) *Controller {
 	return &Controller{
-		vldtr:            vldtr,
-		usecaseAuth:      usecaseAuth,
-		usecaseOperation: usecaseOperation,
+		vldtr:               vldtr,
+		usecaseAuth:         usecaseAuth,
+		usecaseOperation:    usecaseOperation,
+		usecaseShopPurchase: usecaseShopPurchase,
 	}
 }

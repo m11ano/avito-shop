@@ -14,4 +14,5 @@ func RegisterRoutes(app *fiber.App, config config.Config, ctrl *controller.Contr
 
 	rootGroup.Post("/auth", ctrl.AuthHandler)
 	rootGroup.Get("/info", ctrl.InfoHandler)
+	rootGroup.Post("/buy/:name", ctrl.BuyHandler)
 }

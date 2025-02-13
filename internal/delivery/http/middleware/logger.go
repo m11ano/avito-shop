@@ -5,6 +5,7 @@ import (
 	"runtime/debug"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type LogRequestData struct {
@@ -36,8 +37,8 @@ func Logger(logger *slog.Logger) func(*fiber.Ctx) error {
 		}
 
 		requestID := c.Locals("requestID")
-		if requestIDStr, ok := requestID.(string); ok {
-			logRequestData.RequestID = requestIDStr
+		if requestID, ok := requestID.(*uuid.UUID); ok {
+			logRequestData.RequestID = requestID.String()
 		}
 
 		if code >= 400 {
