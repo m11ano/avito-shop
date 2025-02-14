@@ -97,6 +97,42 @@ func (r *Account) FindItemByUsername(ctx context.Context, username string) (*dom
 	return item, nil
 }
 
+func (r *Account) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domain.Account, error) {
+	query, args, err := r.qb.Select(accountTableFields...).From(accountTable).Where(squirrel.Eq{"account_id": ids}).ToSql()
+	if err != nil {
+		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
+		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+	}
+
+	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
+	if err != nil {
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
+		}
+		return nil, convErr
+	}
+
+	defer rows.Close()
+
+	result := make([]domain.Account, 0)
+
+	for rows.Next() {
+		data := &DBAccount{}
+		if err := pgxscan.ScanRow(data, rows); err != nil {
+			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+			return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		}
+		result = append(result, *r.dbToDomain(data))
+	}
+	if err := rows.Err(); err != nil {
+		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+	}
+
+	return result, nil
+}
+
 func (r *Account) Create(ctx context.Context, item *domain.Account) error {
 	dataMap, err := dbhelper.StructToDBMap(item, accountDBSchema)
 	if err != nil {

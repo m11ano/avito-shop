@@ -33,6 +33,7 @@ var App = fx.Options(
 	AuthModule,
 	ShopItemModule,
 	ShopPurchaseModule,
+	CoinTransferModule,
 	// Delivery
 	DeliveryHTTP,
 	// Start && Stop invoke

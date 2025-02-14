@@ -10,13 +10,15 @@ type Controller struct {
 	usecaseAuth         usecase.Auth
 	usecaseOperation    usecase.Operation
 	usecaseShopPurchase usecase.ShopPurchase
+	usecaseCoinTransfer usecase.CoinTransfer
 }
 
-func New(vldtr *validator.Validate, usecaseAuth usecase.Auth, usecaseOperation usecase.Operation, usecaseShopPurchase usecase.ShopPurchase) *Controller {
+func New(vldtr *validator.Validate, usecaseAuth usecase.Auth, usecaseOperation usecase.Operation, usecaseShopPurchase usecase.ShopPurchase, usecaseCoinTransfer usecase.CoinTransfer) *Controller {
 	return &Controller{
 		vldtr:               vldtr,
 		usecaseAuth:         usecaseAuth,
 		usecaseOperation:    usecaseOperation,
 		usecaseShopPurchase: usecaseShopPurchase,
+		usecaseCoinTransfer: usecaseCoinTransfer,
 	}
 }

@@ -4,16 +4,33 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/m11ano/avito-shop/internal/app"
+	"github.com/m11ano/avito-shop/internal/domain"
 )
 
 type InfoHandlerOut struct {
-	Coins     int64                     `json:"coins"`
-	Inventory []InfoHandlerOutInventory `json:"inventory"`
+	Coins       int64                     `json:"coins"`
+	Inventory   []InfoHandlerOutInventory `json:"inventory"`
+	CoinHistory InfoHandlerOutCoinHistory `json:"coinHistory"`
 }
 
 type InfoHandlerOutInventory struct {
 	Type     string `json:"type"`
 	Quantity int64  `json:"quantity"`
+}
+
+type InfoHandlerOutCoinHistory struct {
+	Received []InfoHandlerOutCoinHistoryReceived `json:"received"`
+	Sent     []InfoHandlerOutCoinHistorySent     `json:"sent"`
+}
+
+type InfoHandlerOutCoinHistorySent struct {
+	ToUser string `json:"toUser"`
+	Amount int64  `json:"amount"`
+}
+
+type InfoHandlerOutCoinHistoryReceived struct {
+	FromUser string `json:"fromUser"`
+	Amount   int64  `json:"amount"`
 }
 
 func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error {
@@ -49,6 +66,32 @@ func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error {
 			invItem.Type = item.ShopItem.Name
 		}
 		out.Inventory = append(out.Inventory, invItem)
+	}
+
+	receivedCoinHistory, err := ctrl.usecaseCoinTransfer.GetAggrCoinHistory(c.Context(), *accountID, domain.CoinTransferTypeReciving)
+	if err != nil {
+		return err
+	}
+
+	out.CoinHistory.Received = make([]InfoHandlerOutCoinHistoryReceived, 0, len(receivedCoinHistory))
+	for _, item := range receivedCoinHistory {
+		out.CoinHistory.Received = append(out.CoinHistory.Received, InfoHandlerOutCoinHistoryReceived{
+			FromUser: item.Account.Username,
+			Amount:   item.Amount,
+		})
+	}
+
+	sentCoinHistory, err := ctrl.usecaseCoinTransfer.GetAggrCoinHistory(c.Context(), *accountID, domain.CoinTransferTypeSending)
+	if err != nil {
+		return err
+	}
+
+	out.CoinHistory.Sent = make([]InfoHandlerOutCoinHistorySent, 0, len(sentCoinHistory))
+	for _, item := range sentCoinHistory {
+		out.CoinHistory.Sent = append(out.CoinHistory.Sent, InfoHandlerOutCoinHistorySent{
+			ToUser: item.Account.Username,
+			Amount: item.Amount,
+		})
 	}
 
 	return c.JSON(out)
