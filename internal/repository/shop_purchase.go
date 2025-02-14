@@ -65,7 +65,7 @@ func (r *ShopPurchase) dbToDomain(db *DBShopPurchase) *domain.ShopPurchase {
 	}
 }
 
-type CheckIdentityDTO struct {
+type ShopPurchaseCheckIdentityDTO struct {
 	Count int `db:"count"`
 }
 
@@ -87,7 +87,7 @@ func (r *ShopPurchase) FindIdentity(ctx context.Context, key uuid.UUID) (bool, e
 
 	defer rows.Close()
 
-	dbData := &CheckIdentityDTO{}
+	dbData := &ShopPurchaseCheckIdentityDTO{}
 
 	if err := pgxscan.ScanOne(dbData, rows); err != nil {
 		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
@@ -122,13 +122,13 @@ func (r *ShopPurchase) Create(ctx context.Context, item *domain.ShopPurchase) er
 	return nil
 }
 
-type AggrInventoryByAccountID struct {
+type ShopPurchaseAggrInventoryItem struct {
 	ItemID        uuid.UUID `db:"item_id"`
 	TotalQuantity int64     `db:"total_quantity"`
 }
 
 func (r *ShopPurchase) AggrInventoryByAccountID(ctx context.Context, accountID uuid.UUID) ([]usecase.ShopPurchaseRepositoryAggrInventoryItem, error) {
-	query, args, err := r.qb.Select("item_id", "COUNT(quantity) as total_quantity").From(shopPurchaseTable).Where(squirrel.Eq{"account_id": accountID}).GroupBy("item_id").ToSql()
+	query, args, err := r.qb.Select("item_id", "SUM(quantity) as total_quantity").From(shopPurchaseTable).Where(squirrel.Eq{"account_id": accountID}).GroupBy("item_id").ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
 		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
@@ -148,7 +148,7 @@ func (r *ShopPurchase) AggrInventoryByAccountID(ctx context.Context, accountID u
 	result := make([]usecase.ShopPurchaseRepositoryAggrInventoryItem, 0)
 
 	for rows.Next() {
-		data := AggrInventoryByAccountID{}
+		data := ShopPurchaseAggrInventoryItem{}
 		if err := pgxscan.ScanRow(&data, rows); err != nil {
 			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
 			return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
