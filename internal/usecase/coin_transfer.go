@@ -81,6 +81,10 @@ func (uc *CoinTransferInpl) MakeTransferByUsername(ctx context.Context, targetAc
 				return err
 			}
 
+			if targetAccount.ID == ownerAccountID {
+				return app.NewErrorFrom(app.ErrConflict).SetMessage("cant send coin to yourself")
+			}
+
 			transferForTarget = domain.NewCoinTransfer(domain.CoinTransferTypeReciving, ownerAccountID, targetAccount.ID, ammount, identityKey)
 			transferForOwner = domain.NewCoinTransfer(domain.CoinTransferTypeSending, targetAccount.ID, ownerAccountID, ammount, identityKey)
 
