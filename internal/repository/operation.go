@@ -30,6 +30,7 @@ type DBOperation struct {
 }
 
 var (
+	//nolint:unused
 	operationTableFields = []string{}
 	operationDBSchema    = &DBOperation{}
 )
@@ -54,6 +55,7 @@ func NewOperation(logger *slog.Logger, db *pgxpool.Pool, txc *trmpgx.CtxGetter) 
 	}
 }
 
+//nolint:unused
 func (r *Operation) dbToDomain(db *DBOperation) *domain.Operation {
 	item := &domain.Operation{
 		ID:         db.ID,

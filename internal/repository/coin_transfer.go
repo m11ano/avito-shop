@@ -31,6 +31,7 @@ type DBCoinTransfer struct {
 }
 
 var (
+	//nolint:unused
 	coinTransferTableFields = []string{}
 	coinTransferDBSchema    = &DBCoinTransfer{}
 )
@@ -55,6 +56,7 @@ func NewCoinTransfer(logger *slog.Logger, db *pgxpool.Pool, txc *trmpgx.CtxGette
 	}
 }
 
+//nolint:unused
 func (r *CoinTransfer) dbToDomain(db *DBCoinTransfer) *domain.CoinTransfer {
 	return &domain.CoinTransfer{
 		ID:                    db.ID,

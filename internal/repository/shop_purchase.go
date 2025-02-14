@@ -30,6 +30,7 @@ type DBShopPurchase struct {
 }
 
 var (
+	//nolint:unused
 	shopPurchaseTableFields = []string{}
 	shopPurchaseDBSchema    = &DBShopPurchase{}
 )
@@ -54,6 +55,7 @@ func NewShopPurchase(logger *slog.Logger, db *pgxpool.Pool, txc *trmpgx.CtxGette
 	}
 }
 
+//nolint:unused
 func (r *ShopPurchase) dbToDomain(db *DBShopPurchase) *domain.ShopPurchase {
 	return &domain.ShopPurchase{
 		ID:          db.ID,
