@@ -10,7 +10,6 @@ import (
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/domain"
@@ -69,12 +68,11 @@ func (r *ShopItem) FindItemByID(ctx context.Context, id uuid.UUID) (*domain.Shop
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "40001" {
-			return nil, app.NewErrorFrom(app.ErrTxСoncurrentExec).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
-		r.logger.ErrorContext(ctx, "executing query", "error", err)
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, convErr
 	}
 
 	defer rows.Close()
@@ -103,12 +101,11 @@ func (r *ShopItem) FindItemByName(ctx context.Context, name string) (*domain.Sho
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "40001" {
-			return nil, app.NewErrorFrom(app.ErrTxСoncurrentExec).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
-		r.logger.ErrorContext(ctx, "executing query", "error", err)
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, convErr
 	}
 
 	defer rows.Close()
@@ -137,12 +134,11 @@ func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domai
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "40001" {
-			return nil, app.NewErrorFrom(app.ErrTxСoncurrentExec).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
-		r.logger.ErrorContext(ctx, "executing query", "error", err)
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, convErr
 	}
 
 	defer rows.Close()

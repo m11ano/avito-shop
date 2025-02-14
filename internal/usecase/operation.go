@@ -18,7 +18,7 @@ var ErrOperationNotEnoughFunds = app.NewErrorFrom(app.ErrUnprocessableEntity).Se
 
 type Operation interface {
 	GetBalanceByAccountID(context.Context, uuid.UUID) (int64, int64, error)
-	AddOperation(context.Context, *domain.Operation) error
+	SaveOperation(context.Context, *domain.Operation) error
 }
 
 type OperationRepository interface {
@@ -43,7 +43,7 @@ func NewOperationInpl(logger *slog.Logger, config config.Config, txManager *mana
 	return uc
 }
 
-func (uc *OperationInpl) AddOperation(ctx context.Context, operation *domain.Operation) error {
+func (uc *OperationInpl) SaveOperation(ctx context.Context, operation *domain.Operation) error {
 	switch operation.Type {
 	case domain.OperationTypeDecrease:
 		// Если списание - проверим предварительно баланс в транзакции

@@ -11,6 +11,14 @@ var (
 	ErrInternal            = &LogicError{onlyRead: true, code: 500, message: "internal error"}
 	ErrServiceUnavailable  = &LogicError{onlyRead: true, code: 503, message: "service unavailable"}
 
+	// Ошибка транзакции
 	ErrTxСoncurrentExec = NewErrorFrom(ErrInternal)
-	ErrUniqueViolation  = NewErrorFrom(ErrConflict)
+
+	// Стандартный ошибки при работе с хранилищами
+	ErrStoreUniqueViolation     = NewErrorFrom(ErrConflict)
+	ErrStoreForeignKeyViolation = NewErrorFrom(ErrBadRequest)
+	ErrStoreCheckViolation      = NewErrorFrom(ErrBadRequest)
+	ErrStoreNotNullViolation    = NewErrorFrom(ErrBadRequest)
+	ErrStoreRestrictViolation   = NewErrorFrom(ErrBadRequest)
+	ErrStoreIntegrityViolation  = NewErrorFrom(ErrBadRequest)
 )

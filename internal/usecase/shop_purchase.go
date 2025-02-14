@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -87,7 +86,7 @@ func (uc *ShopPurchaseInpl) MakePurchase(ctx context.Context, itemName string, a
 
 			operation := domain.NewOperation(domain.OperationTypeDecrease, accountID, item.Price*quantity, domain.OperationSourceTypeShopPurchase, &shopPurchase.ID)
 
-			err = uc.usecaseOperation.AddOperation(ctx, operation)
+			err = uc.usecaseOperation.SaveOperation(ctx, operation)
 			if err != nil {
 				return err
 			}
@@ -147,9 +146,6 @@ func (uc *ShopPurchaseInpl) GetInventory(ctx context.Context, accountID uuid.UUI
 			Quantity: invItem.Quantity,
 		})
 	}
-
-	fmt.Println(inventory)
-	fmt.Println(shopItems)
 
 	return result, nil
 }

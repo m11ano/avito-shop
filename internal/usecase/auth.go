@@ -76,7 +76,7 @@ func (uc *AuthInpl) SignInOrSignUp(ctx context.Context, username string, passwor
 
 				if uc.config.Auth.NewAccountAmount > 0 {
 					depositOp := domain.NewOperation(domain.OperationTypeIncrease, account.ID, uc.config.Auth.NewAccountAmount, domain.OperationSourceTypeDeposit, nil)
-					err = uc.usecaseOperation.AddOperation(ctx, depositOp)
+					err = uc.usecaseOperation.SaveOperation(ctx, depositOp)
 					if err != nil {
 						return err
 					}

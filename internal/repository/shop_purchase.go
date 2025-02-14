@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/domain"
@@ -80,12 +78,11 @@ func (r *ShopPurchase) FindIdentity(ctx context.Context, key uuid.UUID) (bool, e
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "40001" {
-			return false, app.NewErrorFrom(app.ErrTxСoncurrentExec).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
-		r.logger.ErrorContext(ctx, "executing query", "error", err)
-		return false, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return false, convErr
 	}
 
 	defer rows.Close()
@@ -99,40 +96,6 @@ func (r *ShopPurchase) FindIdentity(ctx context.Context, key uuid.UUID) (bool, e
 
 	return dbData.Count > 0, nil
 }
-
-// func (r *ShopPurchase) FindItemByUsername(ctx context.Context, username string) (*domain.ShopPurchase, error) {
-// 	query, args, err := r.qb.Select(shopPurchaseTableFields...).From(shopPurchaseTable).Where(squirrel.Eq{"username": username}).Limit(1).ToSql()
-// 	if err != nil {
-// 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
-// 		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
-// 	}
-
-// 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
-// 	if err != nil {
-// 		var pgErr *pgconn.PgError
-// 		if errors.As(err, &pgErr) && pgErr.Code == "40001" {
-// 			return nil, app.NewErrorFrom(app.ErrTxСoncurrentExec).Wrap(err)
-// 		}
-// 		r.logger.ErrorContext(ctx, "executing query", "error", err)
-// 		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
-// 	}
-
-// 	defer rows.Close()
-
-// 	dbData := &DBShopPurchase{}
-
-// 	if err := pgxscan.ScanOne(dbData, rows); err != nil {
-// 		if errors.Is(err, pgx.ErrNoRows) {
-// 			return nil, app.NewErrorFrom(app.ErrNotFound).Wrap(err)
-// 		}
-// 		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-// 		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
-// 	}
-
-// 	item := r.dbToDomain(dbData)
-
-// 	return item, nil
-// }
 
 func (r *ShopPurchase) Create(ctx context.Context, item *domain.ShopPurchase) error {
 	dataMap, err := dbhelper.StructToDBMap(item, shopPurchaseDBSchema)
@@ -149,17 +112,11 @@ func (r *ShopPurchase) Create(ctx context.Context, item *domain.ShopPurchase) er
 
 	_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) {
-			if pgErr.Code == "40001" {
-				return app.NewErrorFrom(app.ErrTxСoncurrentExec).Wrap(err)
-			}
-			if pgErr.Code == "23505" {
-				return app.NewErrorFrom(app.ErrUniqueViolation).Wrap(err).SetData(pgErr.ColumnName)
-			}
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
-		r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
-		return app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return convErr
 	}
 
 	return nil
@@ -179,12 +136,11 @@ func (r *ShopPurchase) AggrInventoryByAccountID(ctx context.Context, accountID u
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "40001" {
-			return nil, app.NewErrorFrom(app.ErrTxСoncurrentExec).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
-		r.logger.ErrorContext(ctx, "executing query", "error", err)
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, convErr
 	}
 
 	defer rows.Close()

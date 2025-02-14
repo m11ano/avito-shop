@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/domain"
@@ -99,12 +97,11 @@ func (r *Operation) CountBalanceByAccountID(ctx context.Context, accountID uuid.
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "40001" {
-			return 0, 0, app.NewErrorFrom(app.ErrTxСoncurrentExec).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
-		r.logger.ErrorContext(ctx, "executing query", "error", err)
-		return 0, 0, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return 0, 0, convErr
 	}
 
 	defer rows.Close()
@@ -134,17 +131,11 @@ func (r *Operation) Create(ctx context.Context, item *domain.Operation) error {
 
 	_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) {
-			if pgErr.Code == "40001" {
-				return app.NewErrorFrom(app.ErrTxСoncurrentExec).Wrap(err)
-			}
-			if pgErr.Code == "23505" {
-				return app.NewErrorFrom(app.ErrUniqueViolation).Wrap(err).SetData(pgErr.ColumnName)
-			}
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
-		r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
-		return app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return convErr
 	}
 
 	return nil
