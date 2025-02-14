@@ -47,11 +47,13 @@ func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error {
 	var err error
 	out := InfoHandlerOut{}
 
+	// Получаем баланс пользователя
 	out.Coins, _, err = ctrl.usecaseOperation.GetBalanceByAccountID(c.Context(), *accountID)
 	if err != nil {
 		return err
 	}
 
+	// Получаем инвентарь и перекладываем в дто ответа
 	inventory, err := ctrl.usecaseShopPurchase.GetInventory(c.Context(), *accountID)
 	if err != nil {
 		return err
@@ -68,6 +70,7 @@ func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error {
 		out.Inventory = append(out.Inventory, invItem)
 	}
 
+	// Получаем агрегированную историю полученных монет и перекладываем в дто ответа
 	receivedCoinHistory, err := ctrl.usecaseCoinTransfer.GetAggrCoinHistory(c.Context(), *accountID, domain.CoinTransferTypeReciving)
 	if err != nil {
 		return err
@@ -81,6 +84,7 @@ func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error {
 		})
 	}
 
+	// Получаем агрегированную историю отправленных монет и перекладываем в дто ответа
 	sentCoinHistory, err := ctrl.usecaseCoinTransfer.GetAggrCoinHistory(c.Context(), *accountID, domain.CoinTransferTypeSending)
 	if err != nil {
 		return err
