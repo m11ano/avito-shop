@@ -1,5 +1,5 @@
 app:
-    mode: "dev"
+    is_prod: false
     start_timeout: 60
     stop_timeout: 10
 

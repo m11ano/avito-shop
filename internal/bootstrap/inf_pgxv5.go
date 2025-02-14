@@ -31,7 +31,7 @@ func NewPgxv5(config config.Config, logger *slog.Logger) *pgxpool.Pool {
 		panic("unable to parse db uri string")
 	}
 
-	if config.App.Mode == "dev" {
+	if !config.App.IsProd {
 		pgxCfg.ConnConfig.Tracer = &pgxv5Tracer{logger: logger}
 	}
 

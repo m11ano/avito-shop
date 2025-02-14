@@ -8,9 +8,9 @@ import (
 
 type Config struct {
 	App struct {
-		StartTimeout int    `yaml:"start_timeout" env:"APP_START_TIMEOUT" env-default:"60"`
-		StopTimeout  int    `yaml:"stop_timeout" env:"APP_STOP_TIMEOUT" env-default:"10"`
-		Mode         string `yaml:"mode" env:"APP_MODE" env-default:"prod"`
+		StartTimeout int  `yaml:"start_timeout" env:"APP_START_TIMEOUT" env-default:"60"`
+		StopTimeout  int  `yaml:"stop_timeout" env:"APP_STOP_TIMEOUT" env-default:"10"`
+		IsProd       bool `yaml:"is_prod" env:"APP_IS_PROD" env-default:"false"`
 	} `yaml:"app"`
 	DB struct {
 		URI                 string `yaml:"uri" env:"DB_URI"`
