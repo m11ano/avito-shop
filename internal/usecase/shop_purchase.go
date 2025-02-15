@@ -71,14 +71,14 @@ func (uc *ShopPurchaseInpl) MakePurchase(ctx context.Context, itemName string, a
 			}
 		}
 
-		item, err := uc.usecaseShopItem.GetItemByName(ctx, itemName)
+		shopItem, err := uc.usecaseShopItem.GetItemByName(ctx, itemName)
 		if err != nil {
 			return err
 		}
 
-		shopPurchase = domain.NewShopPurchase(item.ID, accountID, quantity, identityKey)
+		shopPurchase = domain.NewShopPurchase(shopItem.ID, accountID, quantity, identityKey)
 
-		operation := domain.NewOperation(domain.OperationTypeDecrease, accountID, item.Price*quantity, domain.OperationSourceTypeShopPurchase, &shopPurchase.ID)
+		operation := domain.NewOperation(domain.OperationTypeDecrease, accountID, shopItem.Price*quantity, domain.OperationSourceTypeShopPurchase, &shopPurchase.ID)
 
 		_, err = uc.usecaseOperation.SaveOperation(ctx, operation)
 		if err != nil {
