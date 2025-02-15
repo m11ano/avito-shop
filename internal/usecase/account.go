@@ -11,16 +11,15 @@ import (
 )
 
 type Account interface {
-	GetItemByUsername(context.Context, string) (*domain.Account, error)
-	GetItemsByIDs(context.Context, []uuid.UUID) ([]domain.Account, error)
-	Create(context.Context, *domain.Account) error
+	GetItemByUsername(ctx context.Context, username string) (account *domain.Account, err error)
+	GetItemsByIDs(ctx context.Context, ids []uuid.UUID) (accounts []domain.Account, err error)
+	Create(ctx context.Context, account *domain.Account) error
 }
 
 type AccountRepository interface {
-	FindItemByUsername(context.Context, string) (*domain.Account, error)
-	FindItemsByIDs(context.Context, []uuid.UUID) ([]domain.Account, error)
-	Create(context.Context, *domain.Account) error
-	Update(context.Context, *domain.Account, uuid.UUID) error
+	FindItemByUsername(ctx context.Context, username string) (account *domain.Account, err error)
+	FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (accounts []domain.Account, err error)
+	Create(ctx context.Context, account *domain.Account) error
 }
 
 type AccountInpl struct {

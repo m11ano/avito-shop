@@ -3,22 +3,28 @@ package app
 import (
 	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func ErrCheckIsTxСoncurrentExec(err error) bool {
 	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "40001" {
+	if errors.As(err, &pgErr) && pgErr.Code == "40001" || pgErr.Code == "25P02" {
 		return true
 	}
 	return errors.Is(err, ErrTxСoncurrentExec)
 }
 
 func ErrConvertPgxToLogic(err error) (bool, error) {
+	if errors.Is(err, pgx.ErrNoRows) {
+		return true, NewErrorFrom(ErrStoreNoRows).Wrap(err)
+	}
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		switch {
 		case pgErr.Code == "40001":
+			return true, NewErrorFrom(ErrTxСoncurrentExec).Wrap(err)
+		case pgErr.Code == "25P02":
 			return true, NewErrorFrom(ErrTxСoncurrentExec).Wrap(err)
 		case pgErr.Code == "23505":
 			return true, NewErrorFrom(ErrStoreUniqueViolation).Wrap(err).SetData(pgErr.ColumnName)

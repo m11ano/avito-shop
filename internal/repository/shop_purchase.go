@@ -92,8 +92,11 @@ func (r *ShopPurchase) FindIdentity(ctx context.Context, key uuid.UUID) (bool, e
 	dbData := &ShopPurchaseCheckIdentityDTO{}
 
 	if err := pgxscan.ScanOne(dbData, rows); err != nil {
-		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-		return false, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+		}
+		return false, convErr
 	}
 
 	return dbData.Count > 0, nil
@@ -152,8 +155,11 @@ func (r *ShopPurchase) AggrInventoryByAccountID(ctx context.Context, accountID u
 	for rows.Next() {
 		data := ShopPurchaseAggrInventoryItem{}
 		if err := pgxscan.ScanRow(&data, rows); err != nil {
-			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-			return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+			errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+			if !errIsConv {
+				r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+			}
+			return nil, convErr
 		}
 		result = append(result, usecase.ShopPurchaseRepositoryAggrInventoryItem{
 			ShopItemID: data.ItemID,
@@ -161,8 +167,11 @@ func (r *ShopPurchase) AggrInventoryByAccountID(ctx context.Context, accountID u
 		})
 	}
 	if err := rows.Err(); err != nil {
-		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+		}
+		return nil, convErr
 	}
 
 	return result, nil

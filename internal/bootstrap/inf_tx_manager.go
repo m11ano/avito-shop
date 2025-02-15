@@ -10,7 +10,7 @@ import (
 
 func NewTXManager(dbpool *pgxpool.Pool) (*manager.Manager, *trmpgx.CtxGetter) {
 	txOptions := pgx.TxOptions{
-		IsoLevel: pgx.Serializable, // Устанавливаем уровень изоляции Serializable
+		IsoLevel: pgx.RepeatableRead, // Устанавливаем уровень изоляции RepeatableRead
 	}
 
 	settingsOpts := settings.Must()

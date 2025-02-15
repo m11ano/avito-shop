@@ -8,15 +8,15 @@ import (
 )
 
 type ShopItem interface {
-	GetItemByID(context.Context, uuid.UUID) (*domain.ShopItem, error)
-	GetItemByName(context.Context, string) (*domain.ShopItem, error)
-	GetItemsByIDs(context.Context, []uuid.UUID) ([]domain.ShopItem, error)
+	GetItemByID(ctx context.Context, id uuid.UUID) (shopItem *domain.ShopItem, err error)
+	GetItemByName(ctx context.Context, name string) (shopItem *domain.ShopItem, err error)
+	GetItemsByIDs(ctx context.Context, ids []uuid.UUID) (shopItems []domain.ShopItem, err error)
 }
 
 type ShopItemRepository interface {
-	FindItemByID(context.Context, uuid.UUID) (*domain.ShopItem, error)
-	FindItemByName(context.Context, string) (*domain.ShopItem, error)
-	FindItemsByIDs(context.Context, []uuid.UUID) ([]domain.ShopItem, error)
+	FindItemByID(ctx context.Context, id uuid.UUID) (shopItem *domain.ShopItem, err error)
+	FindItemByName(ctx context.Context, name string) (shopItem *domain.ShopItem, err error)
+	FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (shopItems []domain.ShopItem, err error)
 }
 
 type ShopItemInpl struct {

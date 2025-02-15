@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/m11ano/avito-shop/internal/app"
@@ -50,6 +52,7 @@ func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error {
 	// Получаем баланс пользователя
 	out.Coins, _, err = ctrl.usecaseOperation.GetBalanceByAccountID(c.Context(), *accountID)
 	if err != nil {
+		fmt.Println("!!!", err)
 		return err
 	}
 

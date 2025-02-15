@@ -2,14 +2,12 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 
 	"github.com/Masterminds/squirrel"
 	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/domain"
@@ -80,11 +78,11 @@ func (r *ShopItem) FindItemByID(ctx context.Context, id uuid.UUID) (*domain.Shop
 	dbData := &DBShopItem{}
 
 	if err := pgxscan.ScanOne(dbData, rows); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, app.NewErrorFrom(app.ErrNotFound).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
 		}
-		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, convErr
 	}
 
 	item := r.dbToDomain(dbData)
@@ -113,11 +111,11 @@ func (r *ShopItem) FindItemByName(ctx context.Context, name string) (*domain.Sho
 	dbData := &DBShopItem{}
 
 	if err := pgxscan.ScanOne(dbData, rows); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, app.NewErrorFrom(app.ErrNotFound).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
 		}
-		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, convErr
 	}
 
 	item := r.dbToDomain(dbData)
@@ -148,14 +146,20 @@ func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domai
 	for rows.Next() {
 		data := &DBShopItem{}
 		if err := pgxscan.ScanRow(data, rows); err != nil {
-			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-			return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+			errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+			if !errIsConv {
+				r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+			}
+			return nil, convErr
 		}
 		result = append(result, *r.dbToDomain(data))
 	}
 	if err := rows.Err(); err != nil {
-		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+		}
+		return nil, convErr
 	}
 
 	return result, nil

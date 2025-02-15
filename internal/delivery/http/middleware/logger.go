@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"log/slog"
 	"runtime/debug"
 
@@ -41,22 +42,26 @@ func Logger(logger *slog.Logger) func(*fiber.Ctx) error {
 			logRequestData.RequestID = requestID.String()
 		}
 
-		if code >= 400 {
-			logger.ErrorContext(
-				c.Context(),
-				"http response: error",
-				slog.Int("reponseCode", c.Response().StatusCode()),
-				slog.Any("request", logRequestData),
-			)
-		} else {
-			logger.InfoContext(
-				c.Context(),
-				"http response: success",
-				slog.Int("reponseCode", c.Response().StatusCode()),
-				slog.Any("request", logRequestData),
-			)
-		}
+		go doLogging(c.Context(), logger, code, logRequestData)
 
 		return nil
+	}
+}
+
+func doLogging(ctx context.Context, logger *slog.Logger, code int, data LogRequestData) {
+	if code >= 400 {
+		logger.ErrorContext(
+			ctx,
+			"http response: error",
+			slog.Int("reponseCode", code),
+			slog.Any("request", data),
+		)
+	} else {
+		logger.InfoContext(
+			ctx,
+			"http response: success",
+			slog.Int("reponseCode", code),
+			slog.Any("request", data),
+		)
 	}
 }

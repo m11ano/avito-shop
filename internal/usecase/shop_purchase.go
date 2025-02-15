@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"log/slog"
-	"time"
 
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/google/uuid"
@@ -12,16 +11,14 @@ import (
 	"github.com/m11ano/avito-shop/internal/domain"
 )
 
-const shopPurchaseMaxTxAttempts = 3
-
 type ShopPurchaseGetInventoryItem struct {
 	ShopItem *domain.ShopItem
 	Quantity int64
 }
 
 type ShopPurchase interface {
-	MakePurchase(context.Context, string, uuid.UUID, int64, *uuid.UUID) (*domain.ShopPurchase, error)
-	GetInventory(context.Context, uuid.UUID) ([]ShopPurchaseGetInventoryItem, error)
+	MakePurchase(ctx context.Context, shopItemName string, ownerAccountID uuid.UUID, quantity int64, identityKey *uuid.UUID) (shopPurchase *domain.ShopPurchase, err error)
+	GetInventory(ctx context.Context, accountID uuid.UUID) (inventory []ShopPurchaseGetInventoryItem, err error)
 }
 
 type ShopPurchaseRepositoryAggrInventoryItem struct {
@@ -30,9 +27,9 @@ type ShopPurchaseRepositoryAggrInventoryItem struct {
 }
 
 type ShopPurchaseRepository interface {
-	FindIdentity(context.Context, uuid.UUID) (bool, error)
-	Create(context.Context, *domain.ShopPurchase) error
-	AggrInventoryByAccountID(context.Context, uuid.UUID) ([]ShopPurchaseRepositoryAggrInventoryItem, error)
+	FindIdentity(ctx context.Context, identityKey uuid.UUID) (found bool, err error)
+	Create(ctx context.Context, shopPurchase *domain.ShopPurchase) error
+	AggrInventoryByAccountID(ctx context.Context, accountID uuid.UUID) (inventory []ShopPurchaseRepositoryAggrInventoryItem, err error)
 }
 
 type ShopPurchaseInpl struct {
@@ -62,49 +59,39 @@ func (uc *ShopPurchaseInpl) MakePurchase(ctx context.Context, itemName string, a
 	var err error
 	var shopPurchase *domain.ShopPurchase
 
-	for i := 0; i < shopPurchaseMaxTxAttempts; i++ {
-		err = uc.txManager.Do(ctx, func(ctx context.Context) error {
-			if identityKey != nil {
-				isIdentityExists, err := uc.repo.FindIdentity(ctx, *identityKey)
-				if err != nil {
-					return err
-				}
-
-				if isIdentityExists {
-					return app.ErrConflict
-				}
-			}
-
-			item, err := uc.usecaseShopItem.GetItemByName(ctx, itemName)
+	err = uc.txManager.Do(ctx, func(ctx context.Context) error {
+		if identityKey != nil {
+			isIdentityExists, err := uc.repo.FindIdentity(ctx, *identityKey)
 			if err != nil {
 				return err
 			}
 
-			// Если бы был учет количества - здесь нужно было бы это проверить =)
-
-			shopPurchase = domain.NewShopPurchase(item.ID, accountID, quantity, identityKey)
-
-			operation := domain.NewOperation(domain.OperationTypeDecrease, accountID, item.Price*quantity, domain.OperationSourceTypeShopPurchase, &shopPurchase.ID)
-
-			err = uc.usecaseOperation.SaveOperation(ctx, operation)
-			if err != nil {
-				return err
+			if isIdentityExists {
+				return app.ErrConflict
 			}
-
-			err = uc.repo.Create(ctx, shopPurchase)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		})
-		if err != nil && app.ErrCheckIsTxСoncurrentExec(err) {
-			time.Sleep(time.Duration((i+1)*100) * time.Millisecond)
-			continue
 		}
 
-		break
-	}
+		item, err := uc.usecaseShopItem.GetItemByName(ctx, itemName)
+		if err != nil {
+			return err
+		}
+
+		shopPurchase = domain.NewShopPurchase(item.ID, accountID, quantity, identityKey)
+
+		operation := domain.NewOperation(domain.OperationTypeDecrease, accountID, item.Price*quantity, domain.OperationSourceTypeShopPurchase, &shopPurchase.ID)
+
+		_, err = uc.usecaseOperation.SaveOperation(ctx, operation)
+		if err != nil {
+			return err
+		}
+
+		err = uc.repo.Create(ctx, shopPurchase)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		if !app.IsAppError(err) {
 			return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)

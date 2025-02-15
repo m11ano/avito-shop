@@ -94,8 +94,11 @@ func (r *CoinTransfer) FindIdentity(ctx context.Context, key uuid.UUID) (bool, e
 	dbData := &CoinTransferCheckIdentityDTO{}
 
 	if err := pgxscan.ScanOne(dbData, rows); err != nil {
-		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-		return false, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+		}
+		return false, convErr
 	}
 
 	return dbData.Count > 0, nil
@@ -154,8 +157,11 @@ func (r *CoinTransfer) GetAggrCoinHistoryByAccountID(ctx context.Context, accoun
 	for rows.Next() {
 		data := CoinTransferAggrCoinHistoryItem{}
 		if err := pgxscan.ScanRow(&data, rows); err != nil {
-			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-			return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+			errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+			if !errIsConv {
+				r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+			}
+			return nil, convErr
 		}
 		result = append(result, usecase.CoinTransferRepositoryAggrHistoryItem{
 			AccountID: data.AccountID,
@@ -163,8 +169,11 @@ func (r *CoinTransfer) GetAggrCoinHistoryByAccountID(ctx context.Context, accoun
 		})
 	}
 	if err := rows.Err(); err != nil {
-		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+		}
+		return nil, convErr
 	}
 
 	return result, nil

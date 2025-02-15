@@ -32,15 +32,15 @@ func (ctrl *Controller) BuyHandler(c *fiber.Ctx) error {
 		// Маппинг ошибок под требования контракта
 		switch {
 		case errors.Is(err, usecase.ErrOperationNotEnoughFunds):
-			return app.NewErrorFrom(app.ErrBadRequest).SetMessage(usecase.ErrOperationNotEnoughFunds.Message())
+			return app.NewErrorFrom(app.ErrBadRequest).SetMessage(err.Error())
 		case errors.Is(err, app.ErrConflict):
-			return app.NewErrorFrom(app.ErrBadRequest).SetMessage(app.ErrConflict.Message())
+			return app.NewErrorFrom(app.ErrBadRequest).SetMessage(err.Error())
 		case errors.Is(err, app.ErrNotFound):
-			return app.NewErrorFrom(app.ErrBadRequest).SetMessage(app.ErrNotFound.Message())
+			return app.NewErrorFrom(app.ErrBadRequest).SetMessage(err.Error())
 		default:
 			return err
 		}
 	}
 
-	return c.Status(fiber.StatusOK).SendString("")
+	return c.SendStatus(fiber.StatusOK)
 }

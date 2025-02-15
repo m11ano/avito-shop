@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE account (
     account_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     username VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(66),
+    password_hash VARCHAR(60),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -22,6 +22,11 @@ CREATE TABLE operation (
 
 -- Добавляем индекс для ускорения агрегации баланса + подключаем amount, чтобы индекс не заглядывал в кучу таблицы
 CREATE INDEX idx_operations_account_id ON operation(account_id) INCLUDE (amount);
+
+CREATE TABLE operation_balance (
+    account_id UUID PRIMARY KEY REFERENCES account(account_id) ON DELETE RESTRICT,  -- Запрещаем удаление пользователя, если есть записи
+    balance BIGINT NOT NULL
+);
 
 CREATE TABLE shop_item (
     item_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -46,21 +51,26 @@ CREATE TABLE shop_purchase (
     item_id UUID NOT NULL REFERENCES shop_item(item_id) ON DELETE RESTRICT, -- Запрещаем удаление товара, если есть записи
     account_id UUID NOT NULL REFERENCES account(account_id) ON DELETE RESTRICT, -- Запрещаем удаление пользователя, если есть записи
     quantity BIGINT NOT NULL CHECK (quantity > 0),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    identity_key UUID
 );
 
 CREATE INDEX idx_shop_purchase_account_id ON shop_purchase(account_id);
 CREATE INDEX idx_shop_purchase_item_id ON shop_purchase(item_id);
+CREATE INDEX idx_shop_purchase_identity_key ON shop_purchase(identity_key);
 
 CREATE TABLE coin_transfer (
     transfer_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     transfer_type SMALLINT NOT NULL,
     owner_account_id UUID NOT NULL REFERENCES account(account_id) ON DELETE RESTRICT, -- Запрещаем удаление пользователя, если есть записи
     counterparty_account_id UUID NOT NULL REFERENCES account(account_id) ON DELETE RESTRICT, -- Запрещаем удаление пользователя, если есть записи
-    amount BIGINT NOT NULL CHECK (amount > 0)
+    amount BIGINT NOT NULL CHECK (amount > 0),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    identity_key UUID
 );
 
 CREATE INDEX idx_coin_transfer_owner_account_id ON coin_transfer(owner_account_id);
+CREATE INDEX idx_coin_transfer_identity_key ON coin_transfer(identity_key);
 -- +goose StatementEnd
 
 -- +goose Down
@@ -68,6 +78,7 @@ CREATE INDEX idx_coin_transfer_owner_account_id ON coin_transfer(owner_account_i
 DROP TABLE IF EXISTS coin_transfer;
 DROP TABLE IF EXISTS shop_purchase;
 DROP TABLE IF EXISTS shop_item;
+DROP TABLE IF EXISTS operation_balance;
 DROP TABLE IF EXISTS operation;
 DROP TABLE IF EXISTS account;
 -- +goose StatementEnd

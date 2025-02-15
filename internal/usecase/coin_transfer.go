@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"log/slog"
-	"time"
 
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/google/uuid"
@@ -12,16 +11,14 @@ import (
 	"github.com/m11ano/avito-shop/internal/domain"
 )
 
-const coinTransferMaxTxAttempts = 3
-
 type CoinTransferGetAggrHistoryItem struct {
 	Account *domain.Account
 	Amount  int64
 }
 
 type CoinTransfer interface {
-	MakeTransferByUsername(ctx context.Context, targetAccountUsername string, ownerAccountID uuid.UUID, amount int64, identityKey *uuid.UUID) (*domain.CoinTransfer, *domain.CoinTransfer, error)
-	GetAggrCoinHistory(ctx context.Context, accountID uuid.UUID, transferType domain.CoinTransferType) ([]CoinTransferGetAggrHistoryItem, error)
+	MakeTransferByUsername(ctx context.Context, targetAccountUsername string, ownerAccountID uuid.UUID, amount int64, identityKey *uuid.UUID) (ownerCoinTransfer *domain.CoinTransfer, targetCoinTransfer *domain.CoinTransfer, err error)
+	GetAggrCoinHistory(ctx context.Context, accountID uuid.UUID, transferType domain.CoinTransferType) (aggrHistory []CoinTransferGetAggrHistoryItem, err error)
 }
 
 type CoinTransferRepositoryAggrHistoryItem struct {
@@ -30,9 +27,9 @@ type CoinTransferRepositoryAggrHistoryItem struct {
 }
 
 type CoinTransferRepository interface {
-	FindIdentity(context.Context, uuid.UUID) (bool, error)
-	Create(context.Context, *domain.CoinTransfer) error
-	GetAggrCoinHistoryByAccountID(context.Context, uuid.UUID, domain.CoinTransferType) ([]CoinTransferRepositoryAggrHistoryItem, error)
+	FindIdentity(ctx context.Context, identityKey uuid.UUID) (found bool, err error)
+	Create(ctx context.Context, coinTransfer *domain.CoinTransfer) error
+	GetAggrCoinHistoryByAccountID(ctx context.Context, accountID uuid.UUID, transferType domain.CoinTransferType) (aggrHistory []CoinTransferRepositoryAggrHistoryItem, err error)
 }
 
 type CoinTransferInpl struct {
@@ -57,69 +54,60 @@ func NewCoinTransferInpl(logger *slog.Logger, config config.Config, txManager *m
 }
 
 // Make coin transfer from owner to target
-// First coint transfer is for owner, second for target
 func (uc *CoinTransferInpl) MakeTransferByUsername(ctx context.Context, targetAccountUsername string, ownerAccountID uuid.UUID, ammount int64, identityKey *uuid.UUID) (*domain.CoinTransfer, *domain.CoinTransfer, error) {
 	var err error
 	var transferForOwner *domain.CoinTransfer
 	var transferForTarget *domain.CoinTransfer
 
-	for i := 0; i < coinTransferMaxTxAttempts; i++ {
-		err = uc.txManager.Do(ctx, func(ctx context.Context) error {
-			if identityKey != nil {
-				isIdentityExists, err := uc.repo.FindIdentity(ctx, *identityKey)
-				if err != nil {
-					return err
-				}
-
-				if isIdentityExists {
-					return app.ErrConflict
-				}
-			}
-
-			targetAccount, err := uc.usecaseAccount.GetItemByUsername(ctx, targetAccountUsername)
+	err = uc.txManager.Do(ctx, func(ctx context.Context) error {
+		if identityKey != nil {
+			isIdentityExists, err := uc.repo.FindIdentity(ctx, *identityKey)
 			if err != nil {
 				return err
 			}
 
-			if targetAccount.ID == ownerAccountID {
-				return app.NewErrorFrom(app.ErrConflict).SetMessage("cant send coin to yourself")
+			if isIdentityExists {
+				return app.ErrConflict
 			}
-
-			transferForTarget = domain.NewCoinTransfer(domain.CoinTransferTypeReciving, ownerAccountID, targetAccount.ID, ammount, identityKey)
-			transferForOwner = domain.NewCoinTransfer(domain.CoinTransferTypeSending, targetAccount.ID, ownerAccountID, ammount, identityKey)
-
-			operationForTarget := domain.NewOperation(domain.OperationTypeIncrease, targetAccount.ID, ammount, domain.OperationSourceTypeTransfer, &transferForTarget.ID)
-			operationForOwner := domain.NewOperation(domain.OperationTypeDecrease, ownerAccountID, ammount, domain.OperationSourceTypeTransfer, &transferForOwner.ID)
-
-			err = uc.usecaseOperation.SaveOperation(ctx, operationForOwner)
-			if err != nil {
-				return err
-			}
-
-			err = uc.usecaseOperation.SaveOperation(ctx, operationForTarget)
-			if err != nil {
-				return err
-			}
-
-			err = uc.repo.Create(ctx, transferForOwner)
-			if err != nil {
-				return err
-			}
-
-			err = uc.repo.Create(ctx, transferForTarget)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		})
-		if err != nil && app.ErrCheckIsTxСoncurrentExec(err) {
-			time.Sleep(time.Duration((i+1)*100) * time.Millisecond)
-			continue
 		}
 
-		break
-	}
+		targetAccount, err := uc.usecaseAccount.GetItemByUsername(ctx, targetAccountUsername)
+		if err != nil {
+			return err
+		}
+
+		if targetAccount.ID == ownerAccountID {
+			return app.NewErrorFrom(app.ErrConflict).SetMessage("cant send coin to yourself")
+		}
+
+		transferForTarget = domain.NewCoinTransfer(domain.CoinTransferTypeReciving, ownerAccountID, targetAccount.ID, ammount, identityKey)
+		transferForOwner = domain.NewCoinTransfer(domain.CoinTransferTypeSending, targetAccount.ID, ownerAccountID, ammount, identityKey)
+
+		operationForTarget := domain.NewOperation(domain.OperationTypeIncrease, targetAccount.ID, ammount, domain.OperationSourceTypeTransfer, &transferForTarget.ID)
+		operationForOwner := domain.NewOperation(domain.OperationTypeDecrease, ownerAccountID, ammount, domain.OperationSourceTypeTransfer, &transferForOwner.ID)
+
+		_, err = uc.usecaseOperation.SaveOperation(ctx, operationForOwner)
+		if err != nil {
+			return err
+		}
+
+		_, err = uc.usecaseOperation.SaveOperation(ctx, operationForTarget)
+		if err != nil {
+			return err
+		}
+
+		err = uc.repo.Create(ctx, transferForOwner)
+		if err != nil {
+			return err
+		}
+
+		err = uc.repo.Create(ctx, transferForTarget)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		if !app.IsAppError(err) {
 			return nil, nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)

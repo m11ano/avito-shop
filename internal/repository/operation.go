@@ -2,11 +2,14 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"time"
 
 	"github.com/Masterminds/squirrel"
 	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
+	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -16,7 +19,8 @@ import (
 )
 
 const (
-	operationTable = "operation"
+	operationTable        = "operation"
+	operationBalanceTable = "operation_balance"
 )
 
 type DBOperation struct {
@@ -40,18 +44,20 @@ func init() {
 }
 
 type Operation struct {
-	logger *slog.Logger
-	db     *pgxpool.Pool
-	txc    *trmpgx.CtxGetter
-	qb     squirrel.StatementBuilderType
+	logger    *slog.Logger
+	db        *pgxpool.Pool
+	txc       *trmpgx.CtxGetter
+	qb        squirrel.StatementBuilderType
+	txManager *manager.Manager
 }
 
-func NewOperation(logger *slog.Logger, db *pgxpool.Pool, txc *trmpgx.CtxGetter) *Operation {
+func NewOperation(logger *slog.Logger, db *pgxpool.Pool, txc *trmpgx.CtxGetter, txManager *manager.Manager) *Operation {
 	return &Operation{
-		logger: logger,
-		db:     db,
-		txc:    txc,
-		qb:     squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
+		logger:    logger,
+		db:        db,
+		txc:       txc,
+		qb:        squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
+		txManager: txManager,
 	}
 }
 
@@ -85,16 +91,15 @@ func (r *Operation) domainToDB(item *domain.Operation) (map[string]interface{}, 
 	return dataMap, nil
 }
 
-type CountBalanceDTO struct {
-	Balance        int64 `db:"balance"`
-	OperationCount int64 `db:"operation_count"`
+type OperationGetBalanceDTO struct {
+	Balance int64 `db:"balance"`
 }
 
-func (r *Operation) CountBalanceByAccountID(ctx context.Context, accountID uuid.UUID) (int64, int64, error) {
-	query, args, err := r.qb.Select("COALESCE(SUM(amount), 0) AS balance", "COUNT(*) as operation_count").From(operationTable).Where(squirrel.Eq{"account_id": accountID}).ToSql()
+func (r *Operation) GetBalanceByAccountID(ctx context.Context, accountID uuid.UUID) (int64, bool, error) {
+	query, args, err := r.qb.Select("balance").From(operationBalanceTable).Where(squirrel.Eq{"account_id": accountID}).Limit(1).ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
-		return 0, 0, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return 0, false, app.NewErrorFrom(app.ErrInternal).Wrap(err)
 	}
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
@@ -103,36 +108,40 @@ func (r *Operation) CountBalanceByAccountID(ctx context.Context, accountID uuid.
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
-		return 0, 0, convErr
+		return 0, false, convErr
 	}
 
 	defer rows.Close()
 
-	dbData := &CountBalanceDTO{}
+	dbData := &OperationGetBalanceDTO{}
 
 	if err := pgxscan.ScanOne(dbData, rows); err != nil {
-		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-		return 0, 0, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+		}
+		if errors.Is(convErr, app.ErrStoreNoRows) {
+			return 0, false, nil
+		}
+		return 0, false, convErr
 	}
 
-	return dbData.Balance, dbData.OperationCount, nil
+	return dbData.Balance, true, nil
 }
 
-func (r *Operation) Create(ctx context.Context, item *domain.Operation) error {
-	dataMap, err := r.domainToDB(item)
-	if err != nil {
-		r.logger.ErrorContext(ctx, "convert struct to db map", slog.Any("error", err))
-		return err
-	}
+// Внутренний метод, обновить баланс по логу операций
+func (r *Operation) updateBalanceByAccountID(ctx context.Context, accountID uuid.UUID) error {
+	updateQuery := squirrel.Expr("INSERT INTO operation_balance (account_id, balance) VALUES ($1, (SELECT COALESCE(SUM(amount), 0) FROM operation WHERE account_id = $1)) ON CONFLICT (account_id) DO UPDATE SET balance = (SELECT COALESCE(SUM(amount), 0) FROM operation WHERE account_id = $1)", accountID)
 
-	query, args, err := r.qb.Insert(operationTable).SetMap(dataMap).ToSql()
+	query, args, err := updateQuery.ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
 		return app.NewErrorFrom(app.ErrInternal).Wrap(err)
 	}
 
-	_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
+	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
+		fmt.Println("CATCH")
 		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
@@ -140,5 +149,54 @@ func (r *Operation) Create(ctx context.Context, item *domain.Operation) error {
 		return convErr
 	}
 
+	defer rows.Close()
+
 	return nil
+}
+
+func (r *Operation) Create(ctx context.Context, item *domain.Operation) (int64, error) {
+	dataMap, err := r.domainToDB(item)
+	if err != nil {
+		r.logger.ErrorContext(ctx, "convert struct to db map", slog.Any("error", err))
+		return 0, err
+	}
+
+	var balance int64
+
+	// DOTO: подумать целесообразности ретраев при возникновении блокировки
+	err = r.txManager.Do(ctx, func(ctx context.Context) error {
+		query, args, err := r.qb.Insert(operationTable).SetMap(dataMap).ToSql()
+		if err != nil {
+			r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
+			return app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		}
+
+		_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
+		if err != nil {
+			errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+			if !errIsConv {
+				r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
+			}
+			return convErr
+		}
+
+		// Если две конкурирующие транзакции попытаются обновить баланс аккаунта - одна из них получит блокировку
+		err = r.updateBalanceByAccountID(ctx, item.AccountID)
+		if err != nil {
+			return err
+		}
+
+		// Далее если транзакция получила блокировку, здесь при попытке чтения вызовется ошибка
+		balance, _, err = r.GetBalanceByAccountID(ctx, item.AccountID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	return balance, nil
 }

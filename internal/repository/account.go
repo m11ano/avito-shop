@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/domain"
@@ -85,11 +83,11 @@ func (r *Account) FindItemByUsername(ctx context.Context, username string) (*dom
 	dbData := &DBAccount{}
 
 	if err := pgxscan.ScanOne(dbData, rows); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, app.NewErrorFrom(app.ErrNotFound).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
 		}
-		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, convErr
 	}
 
 	item := r.dbToDomain(dbData)
@@ -120,14 +118,20 @@ func (r *Account) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domain
 	for rows.Next() {
 		data := &DBAccount{}
 		if err := pgxscan.ScanRow(data, rows); err != nil {
-			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-			return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+			errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+			if !errIsConv {
+				r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+			}
+			return nil, convErr
 		}
 		result = append(result, *r.dbToDomain(data))
 	}
 	if err := rows.Err(); err != nil {
-		r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		if !errIsConv {
+			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
+		}
+		return nil, convErr
 	}
 
 	return result, nil
@@ -144,32 +148,6 @@ func (r *Account) Create(ctx context.Context, item *domain.Account) error {
 	query, args, err := r.qb.Insert(accountTable).SetMap(dataMap).ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
-		return app.NewErrorFrom(app.ErrInternal).Wrap(err)
-	}
-
-	_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
-	if err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
-		if !errIsConv {
-			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
-		}
-		return convErr
-	}
-
-	return nil
-}
-
-func (r *Account) Update(ctx context.Context, item *domain.Account, id uuid.UUID) error {
-	dataMap, err := dbhelper.StructToDBMap(item, accountDBSchema)
-	if err != nil {
-		r.logger.ErrorContext(ctx, "convert struct to db map", slog.Any("error", err))
-		return app.NewErrorFrom(app.ErrInternal).Wrap(err)
-	}
-	dataMap["updated_at"] = time.Now()
-
-	query, args, err := r.qb.Update(accountTable).SetMap(dataMap).Where(squirrel.Eq{"id": id}).ToSql()
-	if err != nil {
-		r.logger.ErrorContext(ctx, "error building query", slog.Any("error", err))
 		return app.NewErrorFrom(app.ErrInternal).Wrap(err)
 	}
 

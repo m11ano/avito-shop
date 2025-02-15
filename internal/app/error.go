@@ -54,12 +54,20 @@ func (e *LogicError) Unwrap() []error {
 }
 
 func (e *LogicError) Is(err error) bool {
+	if e == err {
+		return true
+	}
 	for _, wErr := range e.wrapErr {
 		if wErr == err {
 			return true
 		}
 	}
 	return false
+}
+
+func (e *LogicError) Lock() *LogicError {
+	e.onlyRead = true
+	return e
 }
 
 func (e *LogicError) Code() int {

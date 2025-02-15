@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m11ano/avito-shop/pkg/cryptopass"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Account struct {
@@ -16,23 +16,22 @@ type Account struct {
 }
 
 func (a *Account) GeneretePasswordHash(password string) error {
-	salt, err := cryptopass.GenerateSalt()
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
 		return err
 	}
 
-	hash, err := cryptopass.HashPasswordArgon2(password, salt)
-	if err != nil {
-		return err
-	}
-
-	a.PasswordHash = hash
+	a.PasswordHash = string(hash)
 
 	return nil
 }
 
-func (a *Account) VerifyPassword(password string) (bool, error) {
-	return cryptopass.VerifyPasswordArgon2(password, a.PasswordHash)
+func (a *Account) VerifyPassword(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(a.PasswordHash), []byte(password))
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 // New account with text password, hash will be generated automatically

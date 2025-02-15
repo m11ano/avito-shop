@@ -15,11 +15,9 @@ import (
 	"github.com/m11ano/avito-shop/internal/domain"
 )
 
-const authMaxTxAttempts = 3
-
 type Auth interface {
-	SignInOrSignUp(context.Context, string, string) (string, error)
-	AuthByJWTToken(context.Context, string) (*uuid.UUID, error)
+	SignInOrSignUp(ctx context.Context, username string, password string) (jwtToken string, err error)
+	AuthByJWTToken(ctx context.Context, jwtToken string) (accountID *uuid.UUID, err error)
 }
 
 type AuthInpl struct {
@@ -43,7 +41,7 @@ func NewAuthInpl(logger *slog.Logger, config config.Config, txManager *manager.M
 
 func (uc *AuthInpl) generateJWTToken(ctx context.Context, auth *domain.Account) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"authID":    auth.ID.String(),
+		"accountID": auth.ID.String(),
 		"createdAt": strconv.FormatInt(time.Now().Unix(), 10),
 	})
 
@@ -60,40 +58,32 @@ func (uc *AuthInpl) SignInOrSignUp(ctx context.Context, username string, passwor
 	var account *domain.Account
 	var err error
 
-	for i := 0; i < authMaxTxAttempts; i++ {
-		err = uc.txManager.Do(ctx, func(ctx context.Context) error {
-			account, err = uc.usecaseAccount.GetItemByUsername(ctx, username)
-			if err != nil && errors.Is(err, app.ErrNotFound) {
-				account, err = domain.NewAccount(username, password)
-				if err != nil {
-					return err
-				}
-
-				err = uc.usecaseAccount.Create(ctx, account)
-				if err != nil {
-					return err
-				}
-
-				if uc.config.Auth.NewAccountAmount > 0 {
-					depositOp := domain.NewOperation(domain.OperationTypeIncrease, account.ID, uc.config.Auth.NewAccountAmount, domain.OperationSourceTypeDeposit, nil)
-					err = uc.usecaseOperation.SaveOperation(ctx, depositOp)
-					if err != nil {
-						return err
-					}
-				}
-			} else if err != nil {
+	err = uc.txManager.Do(ctx, func(ctx context.Context) error {
+		account, err = uc.usecaseAccount.GetItemByUsername(ctx, username)
+		if err != nil && errors.Is(err, app.ErrNotFound) {
+			account, err = domain.NewAccount(username, password)
+			if err != nil {
 				return err
 			}
 
-			return nil
-		})
-		if err != nil && app.ErrCheckIsTxСoncurrentExec(err) {
-			time.Sleep(time.Duration((i+1)*100) * time.Millisecond)
-			continue
+			err = uc.usecaseAccount.Create(ctx, account)
+			if err != nil {
+				return err
+			}
+
+			if uc.config.Auth.NewAccountAmount > 0 {
+				depositOp := domain.NewOperation(domain.OperationTypeIncrease, account.ID, uc.config.Auth.NewAccountAmount, domain.OperationSourceTypeDeposit, nil)
+				_, err := uc.usecaseOperation.SaveOperation(ctx, depositOp)
+				if err != nil {
+					return err
+				}
+			}
+		} else if err != nil {
+			return err
 		}
 
-		break
-	}
+		return nil
+	})
 	if err != nil {
 		if !app.IsAppError(err) {
 			return "", app.NewErrorFrom(app.ErrInternal).Wrap(err)
@@ -105,11 +95,7 @@ func (uc *AuthInpl) SignInOrSignUp(ctx context.Context, username string, passwor
 		return "", app.NewErrorFrom(app.ErrInternal)
 	}
 
-	check, err := account.VerifyPassword(password)
-	if err != nil {
-		return "", app.NewErrorFrom(app.ErrInternal).Wrap(err)
-	}
-
+	check := account.VerifyPassword(password)
 	if !check {
 		return "", app.ErrUnauthorized
 	}
@@ -131,12 +117,12 @@ func (uc *AuthInpl) AuthByJWTToken(ctx context.Context, tokenStr string) (*uuid.
 		return nil, app.ErrUnauthorized
 	}
 
-	var authIDStr string
+	var accountIDStr string
 	var createdAtStr string
 	var createdAt int64
 	var ok bool
 
-	if authIDStr, ok = claims["authID"].(string); !ok {
+	if accountIDStr, ok = claims["accountID"].(string); !ok {
 		return nil, app.ErrUnauthorized
 	}
 
@@ -149,7 +135,7 @@ func (uc *AuthInpl) AuthByJWTToken(ctx context.Context, tokenStr string) (*uuid.
 		return nil, app.NewErrorFrom(app.ErrUnauthorized).Wrap(err)
 	}
 
-	authID, err := uuid.Parse(authIDStr)
+	accountID, err := uuid.Parse(accountIDStr)
 	if err != nil {
 		return nil, app.NewErrorFrom(app.ErrUnauthorized).Wrap(err)
 	}
@@ -158,5 +144,5 @@ func (uc *AuthInpl) AuthByJWTToken(ctx context.Context, tokenStr string) (*uuid.
 		return nil, app.ErrUnauthorized
 	}
 
-	return &authID, nil
+	return &accountID, nil
 }

@@ -12,13 +12,14 @@ var (
 	ErrServiceUnavailable  = &LogicError{onlyRead: true, code: 503, message: "service unavailable"}
 
 	// Ошибка транзакции
-	ErrTxСoncurrentExec = NewErrorFrom(ErrInternal)
+	ErrTxСoncurrentExec = NewErrorFrom(ErrConflict).Lock()
 
 	// Стандартный ошибки при работе с хранилищами
-	ErrStoreUniqueViolation     = NewErrorFrom(ErrConflict)
-	ErrStoreForeignKeyViolation = NewErrorFrom(ErrBadRequest)
-	ErrStoreCheckViolation      = NewErrorFrom(ErrBadRequest)
-	ErrStoreNotNullViolation    = NewErrorFrom(ErrBadRequest)
-	ErrStoreRestrictViolation   = NewErrorFrom(ErrBadRequest)
-	ErrStoreIntegrityViolation  = NewErrorFrom(ErrBadRequest)
+	ErrStoreNoRows              = NewErrorFrom(ErrNotFound).Lock()
+	ErrStoreUniqueViolation     = NewErrorFrom(ErrConflict).Lock()
+	ErrStoreForeignKeyViolation = NewErrorFrom(ErrBadRequest).Lock()
+	ErrStoreCheckViolation      = NewErrorFrom(ErrBadRequest).Lock()
+	ErrStoreNotNullViolation    = NewErrorFrom(ErrBadRequest).Lock()
+	ErrStoreRestrictViolation   = NewErrorFrom(ErrBadRequest).Lock()
+	ErrStoreIntegrityViolation  = NewErrorFrom(ErrBadRequest).Lock()
 )
