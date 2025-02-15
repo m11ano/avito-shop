@@ -36,7 +36,7 @@ func main() {
 			Method: "GET",
 			URL:    "http://localhost:8080/api/buy/pen",
 			Header: map[string][]string{
-				"Authorization": {"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SUQiOiI2MGFiM2Q2Yy0wMzJiLTQwNzctYmM2MC0yMjAxNjk2OTc0N2MiLCJjcmVhdGVkQXQiOiIxNzM5NTc0MTk4In0.q2GupHDHkR8AjHHOKvBJdiF6ghVVW9Pv4ZwMoZSOkiE"},
+				"Authorization": {"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SUQiOiI1MTFiNzY2MS1mMTZiLTQyNWItYWFkNy05YWMzZTIxZjZhZmUiLCJjcmVhdGVkQXQiOiIxNzM5NjQ0MDA4In0.UnFKeuVYr0TTp770n6TcrCtSaXd30kygdD4IM-MB_vs"},
 			},
 		})
 		attacker := vegeta.NewAttacker(vegeta.Timeout(10 * time.Second))
@@ -48,7 +48,7 @@ func main() {
 			}
 			metrics.Add(res)
 		}
-		metrics.Close()
+
 	*/
 
 	rate := vegeta.Rate{Freq: 1000, Per: time.Second} // 1000 RPS
@@ -125,6 +125,7 @@ func main() {
 	metrics.Close()
 
 	// Выводим сводку
+	fmt.Printf("RPS: %d\n", rate.Freq)
 	fmt.Printf("Requests: %d, Success: %d (%.2f%%)\n", metrics.Requests, successCount, metrics.Success*100)
 	fmt.Printf("Latency [min, mean, p99, max]: %d us, %d us, %d us, %d us\n", metrics.Latencies.Min.Microseconds(), metrics.Latencies.Mean.Microseconds(), metrics.Latencies.P99.Microseconds(), metrics.Latencies.Max.Microseconds())
 	fmt.Printf("Status Codes: %v\n", metrics.StatusCodes)
