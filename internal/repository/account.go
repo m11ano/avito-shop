@@ -95,7 +95,7 @@ func (r *Account) FindItemByUsername(ctx context.Context, username string) (*dom
 	return item, nil
 }
 
-func (r *Account) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domain.Account, error) {
+func (r *Account) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]domain.Account, error) {
 	query, args, err := r.qb.Select(accountTableFields...).From(accountTable).Where(squirrel.Eq{"account_id": ids}).ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
@@ -113,7 +113,7 @@ func (r *Account) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domain
 
 	defer rows.Close()
 
-	result := make([]domain.Account, 0)
+	result := map[uuid.UUID]domain.Account{}
 
 	for rows.Next() {
 		data := &DBAccount{}
@@ -124,7 +124,8 @@ func (r *Account) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domain
 			}
 			return nil, convErr
 		}
-		result = append(result, *r.dbToDomain(data))
+		domainItem := *r.dbToDomain(data)
+		result[domainItem.ID] = domainItem
 	}
 	if err := rows.Err(); err != nil {
 		errIsConv, convErr := app.ErrConvertPgxToLogic(err)

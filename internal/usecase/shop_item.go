@@ -10,13 +10,13 @@ import (
 type ShopItem interface {
 	GetItemByID(ctx context.Context, id uuid.UUID) (shopItem *domain.ShopItem, err error)
 	GetItemByName(ctx context.Context, name string) (shopItem *domain.ShopItem, err error)
-	GetItemsByIDs(ctx context.Context, ids []uuid.UUID) (shopItems []domain.ShopItem, err error)
+	GetItemsByIDs(ctx context.Context, ids []uuid.UUID) (shopItems map[uuid.UUID]domain.ShopItem, err error)
 }
 
 type ShopItemRepository interface {
 	FindItemByID(ctx context.Context, id uuid.UUID) (shopItem *domain.ShopItem, err error)
 	FindItemByName(ctx context.Context, name string) (shopItem *domain.ShopItem, err error)
-	FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (shopItems []domain.ShopItem, err error)
+	FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (shopItems map[uuid.UUID]domain.ShopItem, err error)
 }
 
 type ShopItemInpl struct {
@@ -38,6 +38,6 @@ func (uc *ShopItemInpl) GetItemByName(ctx context.Context, name string) (*domain
 	return uc.repo.FindItemByName(ctx, name)
 }
 
-func (uc *ShopItemInpl) GetItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domain.ShopItem, error) {
+func (uc *ShopItemInpl) GetItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]domain.ShopItem, error) {
 	return uc.repo.FindItemsByIDs(ctx, ids)
 }

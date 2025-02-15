@@ -103,8 +103,6 @@ func (uc *ShopPurchaseInpl) MakePurchase(ctx context.Context, itemName string, a
 }
 
 func (uc *ShopPurchaseInpl) GetInventory(ctx context.Context, accountID uuid.UUID) ([]ShopPurchaseGetInventoryItem, error) {
-	result := make([]ShopPurchaseGetInventoryItem, 0)
-
 	inventory, err := uc.repo.AggrInventoryByAccountID(ctx, accountID)
 	if err != nil {
 		return nil, err
@@ -120,18 +118,17 @@ func (uc *ShopPurchaseInpl) GetInventory(ctx context.Context, accountID uuid.UUI
 		return nil, err
 	}
 
-	for _, invItem := range inventory {
-		var invShopItem *domain.ShopItem
-		for _, shopItem := range shopItems {
-			if shopItem.ID == invItem.ShopItemID {
-				invShopItem = &shopItem
-				break
-			}
+	result := make([]ShopPurchaseGetInventoryItem, 0, len(inventory))
+
+	for _, item := range inventory {
+		resultItem := ShopPurchaseGetInventoryItem{
+			Quantity: item.Quantity,
 		}
-		result = append(result, ShopPurchaseGetInventoryItem{
-			ShopItem: invShopItem,
-			Quantity: invItem.Quantity,
-		})
+		if shopItem, ok := shopItems[item.ShopItemID]; ok {
+			resultItem.ShopItem = &shopItem
+		}
+
+		result = append(result, resultItem)
 	}
 
 	return result, nil

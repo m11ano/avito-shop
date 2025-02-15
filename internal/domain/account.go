@@ -28,10 +28,7 @@ func (a *Account) GeneretePasswordHash(password string) error {
 
 func (a *Account) VerifyPassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(a.PasswordHash), []byte(password))
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 // New account with text password, hash will be generated automatically

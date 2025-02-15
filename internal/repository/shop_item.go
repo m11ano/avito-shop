@@ -123,7 +123,7 @@ func (r *ShopItem) FindItemByName(ctx context.Context, name string) (*domain.Sho
 	return item, nil
 }
 
-func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domain.ShopItem, error) {
+func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]domain.ShopItem, error) {
 	query, args, err := r.qb.Select(shopItemTableFields...).From(shopItemTable).Where(squirrel.Eq{"item_id": ids}).ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
@@ -141,7 +141,7 @@ func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domai
 
 	defer rows.Close()
 
-	result := make([]domain.ShopItem, 0)
+	result := map[uuid.UUID]domain.ShopItem{}
 
 	for rows.Next() {
 		data := &DBShopItem{}
@@ -152,7 +152,8 @@ func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domai
 			}
 			return nil, convErr
 		}
-		result = append(result, *r.dbToDomain(data))
+		domainItem := *r.dbToDomain(data)
+		result[domainItem.ID] = domainItem
 	}
 	if err := rows.Err(); err != nil {
 		errIsConv, convErr := app.ErrConvertPgxToLogic(err)

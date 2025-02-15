@@ -12,13 +12,13 @@ import (
 
 type Account interface {
 	GetItemByUsername(ctx context.Context, username string) (account *domain.Account, err error)
-	GetItemsByIDs(ctx context.Context, ids []uuid.UUID) (accounts []domain.Account, err error)
+	GetItemsByIDs(ctx context.Context, ids []uuid.UUID) (accounts map[uuid.UUID]domain.Account, err error)
 	Create(ctx context.Context, account *domain.Account) error
 }
 
 type AccountRepository interface {
 	FindItemByUsername(ctx context.Context, username string) (account *domain.Account, err error)
-	FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (accounts []domain.Account, err error)
+	FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (accounts map[uuid.UUID]domain.Account, err error)
 	Create(ctx context.Context, account *domain.Account) error
 }
 
@@ -43,7 +43,7 @@ func (uc *AccountInpl) GetItemByUsername(ctx context.Context, username string) (
 	return uc.repo.FindItemByUsername(ctx, username)
 }
 
-func (uc *AccountInpl) GetItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]domain.Account, error) {
+func (uc *AccountInpl) GetItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]domain.Account, error) {
 	return uc.repo.FindItemsByIDs(ctx, ids)
 }
 

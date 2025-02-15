@@ -119,8 +119,6 @@ func (uc *CoinTransferInpl) MakeTransferByUsername(ctx context.Context, targetAc
 }
 
 func (uc *CoinTransferInpl) GetAggrCoinHistory(ctx context.Context, accountID uuid.UUID, transferType domain.CoinTransferType) ([]CoinTransferGetAggrHistoryItem, error) {
-	result := make([]CoinTransferGetAggrHistoryItem, 0)
-
 	history, err := uc.repo.GetAggrCoinHistoryByAccountID(ctx, accountID, transferType)
 	if err != nil {
 		return nil, err
@@ -135,18 +133,17 @@ func (uc *CoinTransferInpl) GetAggrCoinHistory(ctx context.Context, accountID uu
 		return nil, err
 	}
 
-	for _, invItem := range history {
-		var hstrItem *domain.Account
-		for _, accountItem := range accountItems {
-			if accountItem.ID == invItem.AccountID {
-				hstrItem = &accountItem
-				break
-			}
+	result := make([]CoinTransferGetAggrHistoryItem, 0, len(history))
+
+	for _, item := range history {
+		resultItem := CoinTransferGetAggrHistoryItem{
+			Amount: item.Ammount,
 		}
-		result = append(result, CoinTransferGetAggrHistoryItem{
-			Account: hstrItem,
-			Amount:  invItem.Ammount,
-		})
+		if accountItem, ok := accountItems[item.AccountID]; ok {
+			resultItem.Account = &accountItem
+		}
+
+		result = append(result, resultItem)
 	}
 
 	return result, nil
