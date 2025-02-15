@@ -17,4 +17,4 @@ http:
 auth:
     jwt_secret_key: "T9vq75NyopB05w2iO8Hp4iduv9xHD5woYWgfEDZmpKOOd4CDC8"
     jwt_token_ttl: 86400
-    new_account_amount: 1000000000
+    new_account_amount: 1000
