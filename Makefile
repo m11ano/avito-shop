@@ -4,6 +4,16 @@
 run:
 	go run cmd/app/main.go
 
+# tests
+
+.PHONY: test
+test:
+	go test -coverprofile=coverage.out ./... && go tool cover -html=coverage.out -o coverage.html
+
+.PHONY: test-cov
+test-cov:
+	go tool cover -func=coverage.out
+
 # linters
 
 .PHONY: lint

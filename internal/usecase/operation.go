@@ -13,11 +13,13 @@ import (
 
 var ErrOperationNotEnoughFunds = app.NewErrorFrom(app.ErrUnprocessableEntity).SetMessage("not enough funds")
 
+//go:generate mockery --name=Operation --output=mocks --case=underscore
 type Operation interface {
 	GetBalanceByAccountID(ctx context.Context, accountID uuid.UUID) (balance int64, found bool, err error)
 	SaveOperation(ctx context.Context, operation *domain.Operation) (balance int64, err error)
 }
 
+//go:generate mockery --name=OperationRepository --output=mocks --case=underscore
 type OperationRepository interface {
 	GetBalanceByAccountID(ctx context.Context, accountID uuid.UUID) (balance int64, found bool, err error)
 	Create(ctx context.Context, operation *domain.Operation) (balance int64, err error)

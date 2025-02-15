@@ -30,11 +30,11 @@ type Config struct {
 	}
 }
 
-func LoadConfig() Config {
+func LoadConfig(file string) Config {
 	//
 	var Config Config
 
-	err := cleanenv.ReadConfig("config.yml", &Config)
+	err := cleanenv.ReadConfig(file, &Config)
 	if err != nil {
 		log.Fatal("config error", err)
 	}

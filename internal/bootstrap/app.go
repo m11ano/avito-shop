@@ -7,9 +7,12 @@ import (
 	"runtime/debug"
 	"time"
 
+	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
+	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/m11ano/avito-shop/internal/config"
+	"github.com/m11ano/avito-shop/internal/db/txmngr"
 	"github.com/m11ano/avito-shop/internal/migrations"
 	"go.uber.org/fx"
 )
@@ -26,7 +29,9 @@ var App = fx.Options(
 		}, logger)
 		return fiberApp
 	}),
-	fx.Provide(NewTXManager),
+	fx.Provide(func(pgxpool *pgxpool.Pool) (*manager.Manager, *trmpgx.CtxGetter) {
+		return txmngr.New(pgxpool)
+	}),
 	// Бизнес логика
 	AccountModule,
 	OperationModule,

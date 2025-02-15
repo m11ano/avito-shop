@@ -17,7 +17,7 @@ type AuthHandlerIn struct {
 	Password string `json:"password" validate:"required,max=255"`
 }
 
-func (ctrl *Controller) AuthHandlerValidate(in *AuthHandlerIn) (bool, string) {
+func (ctrl *Controller) AuthHandlerValidate(in *AuthHandlerIn) (isOk bool, errMsg string) {
 	if err := ctrl.vldtr.Struct(in); err != nil {
 		return validation.FormatErrors(err)
 	}

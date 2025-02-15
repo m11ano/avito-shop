@@ -1,14 +1,14 @@
-package bootstrap
+package txmngr
 
 import (
 	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/settings"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/m11ano/avito-shop/internal/db"
 )
 
-func NewTXManager(dbpool *pgxpool.Pool) (*manager.Manager, *trmpgx.CtxGetter) {
+func New(dbpool db.PgxPool) (*manager.Manager, *trmpgx.CtxGetter) {
 	txOptions := pgx.TxOptions{
 		IsoLevel: pgx.RepeatableRead, // Устанавливаем уровень изоляции RepeatableRead
 	}

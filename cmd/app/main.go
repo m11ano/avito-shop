@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	cfg := config.LoadConfig()
+	cfg := config.LoadConfig("config.yml")
 
 	app := fx.New(
 		fx.Options(
