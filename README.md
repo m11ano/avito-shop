@@ -36,7 +36,7 @@ make test-integration
 
 ### Результаты:
 
-![результаты](tests/load/result.png)
+![результаты](tests/load/result.png)  
 Доступность: 100%  
 Среднее время ответа: 6 мс  
 99% ответов: < 17 мс  
