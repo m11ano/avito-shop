@@ -16,6 +16,7 @@ type CoinTransferGetAggrHistoryItem struct {
 	Amount  int64
 }
 
+//go:generate mockery --name=CoinTransfer --output=../../tests/mocks --case=underscore
 type CoinTransfer interface {
 	MakeTransferByUsername(ctx context.Context, targetAccountUsername string, ownerAccountID uuid.UUID, amount int64, identityKey *uuid.UUID) (ownerCoinTransfer *domain.CoinTransfer, targetCoinTransfer *domain.CoinTransfer, err error)
 	GetAggrCoinHistory(ctx context.Context, accountID uuid.UUID, transferType domain.CoinTransferType) (aggrHistory []CoinTransferGetAggrHistoryItem, err error)
@@ -26,6 +27,7 @@ type CoinTransferRepositoryAggrHistoryItem struct {
 	Ammount   int64
 }
 
+//go:generate mockery --name=CoinTransferRepository --output=../../tests/mocks --case=underscore
 type CoinTransferRepository interface {
 	FindIdentity(ctx context.Context, identityKey uuid.UUID) (found bool, err error)
 	Create(ctx context.Context, coinTransfer *domain.CoinTransfer) error

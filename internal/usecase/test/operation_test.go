@@ -11,7 +11,7 @@ import (
 	"github.com/m11ano/avito-shop/internal/db/txmngr"
 	"github.com/m11ano/avito-shop/internal/domain"
 	"github.com/m11ano/avito-shop/internal/usecase"
-	"github.com/m11ano/avito-shop/test/mocks"
+	"github.com/m11ano/avito-shop/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"

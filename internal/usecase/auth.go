@@ -15,6 +15,7 @@ import (
 	"github.com/m11ano/avito-shop/internal/domain"
 )
 
+//go:generate mockery --name=Auth --output=../../tests/mocks --case=underscore
 type Auth interface {
 	SignInOrSignUp(ctx context.Context, username string, password string) (jwtToken string, err error)
 	AuthByJWTToken(ctx context.Context, jwtToken string) (accountID *uuid.UUID, err error)

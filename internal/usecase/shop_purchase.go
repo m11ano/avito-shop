@@ -16,6 +16,7 @@ type ShopPurchaseGetInventoryItem struct {
 	Quantity int64
 }
 
+//go:generate mockery --name=ShopPurchase --output=../../tests/mocks --case=underscore
 type ShopPurchase interface {
 	MakePurchase(ctx context.Context, shopItemName string, ownerAccountID uuid.UUID, quantity int64, identityKey *uuid.UUID) (shopPurchase *domain.ShopPurchase, err error)
 	GetInventory(ctx context.Context, accountID uuid.UUID) (inventory []ShopPurchaseGetInventoryItem, err error)
@@ -26,6 +27,7 @@ type ShopPurchaseRepositoryAggrInventoryItem struct {
 	Quantity   int64
 }
 
+//go:generate mockery --name=ShopPurchaseRepository --output=../../tests/mocks --case=underscore
 type ShopPurchaseRepository interface {
 	FindIdentity(ctx context.Context, identityKey uuid.UUID) (found bool, err error)
 	Create(ctx context.Context, shopPurchase *domain.ShopPurchase) error

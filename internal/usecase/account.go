@@ -10,14 +10,14 @@ import (
 	"github.com/m11ano/avito-shop/internal/domain"
 )
 
-//go:generate mockery --name=Account --output=mocks --case=underscore
+//go:generate mockery --name=Account --output=../../tests/mocks --case=underscore
 type Account interface {
 	GetItemByUsername(ctx context.Context, username string) (account *domain.Account, err error)
 	GetItemsByIDs(ctx context.Context, ids []uuid.UUID) (accounts map[uuid.UUID]domain.Account, err error)
 	Create(ctx context.Context, account *domain.Account) error
 }
 
-//go:generate mockery --name=AccountRepository --output=mocks --case=underscore
+//go:generate mockery --name=AccountRepository --output=../../tests/mocks --case=underscore
 type AccountRepository interface {
 	FindItemByUsername(ctx context.Context, username string) (account *domain.Account, err error)
 	FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (accounts map[uuid.UUID]domain.Account, err error)
