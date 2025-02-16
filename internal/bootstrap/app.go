@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"runtime/debug"
 	"time"
 
@@ -15,11 +16,20 @@ import (
 	"github.com/m11ano/avito-shop/internal/infra/db/migrations"
 	"github.com/m11ano/avito-shop/internal/infra/db/txmngr"
 	"go.uber.org/fx"
+	"go.uber.org/fx/fxevent"
 )
 
 var App = fx.Options(
 	// Инфраструктура
 	fx.Provide(NewLogger),
+	fx.WithLogger(func(config config.Config) fxevent.Logger {
+		if !config.App.UseLogger {
+			return fxevent.NopLogger
+		}
+		return &fxevent.ConsoleLogger{
+			W: os.Stdout,
+		}
+	}),
 	fx.Provide(NewPgxv5),
 	fx.Provide(func(config config.Config, logger *slog.Logger) *fiber.App {
 		fiberApp := NewHTTPFiber(HTTPConfig{
@@ -51,28 +61,32 @@ var App = fx.Options(
 				}
 				logger.Info("Postgress connected")
 
-				err = migrations.RunMigrations(ctx, dbpool, logger)
+				err = migrations.RunMigrations(ctx, dbpool, config, logger)
 				if err != nil {
 					return err
 				}
 
-				go func() {
-					if err := fiberApp.Listen(fmt.Sprintf(":%d", config.HTTP.Port)); err != nil {
-						logger.Error("failed to start fiber", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
-						err := shutdowner.Shutdown()
-						if err != nil {
-							logger.Error("failed to shutdown", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
+				if config.HTTP.Port > 0 {
+					go func() {
+						if err := fiberApp.Listen(fmt.Sprintf(":%d", config.HTTP.Port)); err != nil {
+							logger.Error("failed to start fiber", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
+							err := shutdowner.Shutdown()
+							if err != nil {
+								logger.Error("failed to shutdown", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
+							}
 						}
-					}
-				}()
+					}()
+				}
 
 				return nil
 			},
 			OnStop: func(_ context.Context) error {
-				logger.Info("stopping HTTP Fiber")
-				err := fiberApp.ShutdownWithTimeout(time.Duration(config.HTTP.StopTimeout) * time.Second)
-				if err != nil {
-					logger.Error("failed to stop fiber", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
+				if config.HTTP.Port > 0 {
+					logger.Info("stopping HTTP Fiber")
+					err := fiberApp.ShutdownWithTimeout(time.Duration(config.HTTP.StopTimeout) * time.Second)
+					if err != nil {
+						logger.Error("failed to stop fiber", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
+					}
 				}
 
 				logger.Info("stopping Postgress")

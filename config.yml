@@ -2,11 +2,13 @@ app:
     is_prod: true
     start_timeout: 60
     stop_timeout: 10
+    use_logger: true
 
 db:
     uri: "postgres://postgres:123456@localhost:5433/avito-shop"
     max_attempts: 10
     attempt_sleep_seconds: 3
+    migrations_path: "migrations"
 
 http:
     prefix: "api"

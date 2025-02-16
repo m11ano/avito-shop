@@ -14,6 +14,10 @@ test:
 test-cov:
 	go tool cover -func=coverage.out
 
+.PHONY: test-integration
+test-integration:
+	go test ./tests -v
+
 # linters
 
 .PHONY: lint

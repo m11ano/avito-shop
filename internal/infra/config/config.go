@@ -11,11 +11,13 @@ type Config struct {
 		StartTimeout int  `yaml:"start_timeout" env:"APP_START_TIMEOUT" env-default:"60"`
 		StopTimeout  int  `yaml:"stop_timeout" env:"APP_STOP_TIMEOUT" env-default:"10"`
 		IsProd       bool `yaml:"is_prod" env:"APP_IS_PROD" env-default:"false"`
+		UseLogger    bool `yaml:"use_logger" env:"APP_USE_LOGGER" env-default:"true"`
 	} `yaml:"app"`
 	DB struct {
 		URI                 string `yaml:"uri" env:"DB_URI"`
 		MaxAttempt          int    `yaml:"max_attempts" env:"DB_MAX_ATTEMPTS" env-default:"10"`
 		AttemptSleepSeconds int    `yaml:"attempt_sleep_seconds" env:"DB_ATTEMPT_SLEEP_SECONDS" env-default:"3"`
+		MigrationsPath      string `yaml:"migrations_path" env:"DB_MIGRATIONS_PATH" env-default:"migrations"`
 	} `yaml:"db"`
 	HTTP struct {
 		Prefix      string `yaml:"prefix" env:"HTTP_PREFIX" env-default:"api"`
