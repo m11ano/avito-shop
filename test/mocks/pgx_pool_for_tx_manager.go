@@ -1,13 +1,12 @@
-package txmngr
+package mocks
 
 import (
-	"github.com/m11ano/avito-shop/internal/db/mocks"
 	mock "github.com/stretchr/testify/mock"
 )
 
-func NewPgxPoolMock() *mocks.PgxPool {
-	mockPool := new(mocks.PgxPool)
-	mockTx := new(mocks.PoolTxInterface)
+func NewPgxPoolMockForTxManager() *PgxPool {
+	mockPool := new(PgxPool)
+	mockTx := new(PoolTxInterface)
 
 	// Настраиваем пул: при вызове BeginTx(...) он вернёт mockTx
 	mockPool.On("BeginTx", mock.Anything, mock.AnythingOfType("pgx.TxOptions")).Return(mockTx, nil)

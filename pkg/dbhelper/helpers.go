@@ -5,7 +5,6 @@ package dbhelper
 import (
 	"fmt"
 	"reflect"
-	"strings"
 	"sync"
 )
 
@@ -57,111 +56,11 @@ func safeConvert(conv ConverterFunc, src interface{}) (result interface{}, err e
 	return
 }
 
-// snakeToCamel converts a snake_case string to CamelCase.
-// For example, "birth_date" becomes "BirthDate".
-func snakeToCamel(s string) string {
-	parts := strings.Split(s, "_")
-	for i, part := range parts {
-		if len(part) > 0 {
-			parts[i] = strings.ToUpper(part[:1]) + strings.ToLower(part[1:])
-		}
-	}
-	return strings.Join(parts, "")
-}
-
-// lookupField attempts to find a field in typ corresponding to a given column name.
-// It first tries an exact match, then converts the column name from snake_case to CamelCase.
-// If the result ends with "Id", it also tries replacing it with "ID".
-func lookupField(typ reflect.Type, colName string) (reflect.StructField, bool) {
-	// Try an exact match using the column name.
-	if field, ok := typ.FieldByName(colName); ok {
-		return field, true
-	}
-	// Try converting from snake_case to CamelCase.
-	camel := snakeToCamel(colName)
-	if field, ok := typ.FieldByName(camel); ok {
-		return field, true
-	}
-	// If the camel name ends with "Id", try replacing it with "ID".
-	if strings.HasSuffix(camel, "Id") {
-		altCamel := camel[:len(camel)-2] + "ID"
-		if field, ok := typ.FieldByName(altCamel); ok {
-			return field, true
-		}
-	}
-	return reflect.StructField{}, false
-}
-
 // ConvertDBToDomain converts a database record (dbRecord) into a domain model (domainModel).
 // The database model provides the mapping between columns and fields via struct tags (e.g., db:"birth_date").
 // The domain model does not contain tags, so the function first attempts to match by tag name and then
 // converts snake_case names to CamelCase (including handling "Id" vs "ID").
 // domainModel must be a pointer to a struct.
-func ConvertDBToDomain(dbRecord, domainModel interface{}) error {
-	// Get the value of the database record (struct or pointer to struct).
-	dbVal := reflect.ValueOf(dbRecord)
-	if dbVal.Kind() == reflect.Ptr {
-		dbVal = dbVal.Elem()
-	}
-	if dbVal.Kind() != reflect.Struct {
-		return fmt.Errorf("dbRecord must be a struct or pointer to a struct")
-	}
-
-	// domainModel must be a pointer to a struct.
-	dVal := reflect.ValueOf(domainModel)
-	if dVal.Kind() != reflect.Ptr || dVal.Elem().Kind() != reflect.Struct {
-		return fmt.Errorf("domainModel must be a pointer to a struct")
-	}
-	dVal = dVal.Elem()
-	dType := dVal.Type()
-
-	dbType := dbVal.Type()
-	for i := 0; i < dbType.NumField(); i++ {
-		dbField := dbType.Field(i)
-		dbFieldValue := dbVal.Field(i)
-		if !dbFieldValue.IsValid() {
-			continue
-		}
-		// Extract the column name from the tag; if absent, use the field name.
-		colName := dbField.Tag.Get("db")
-		if colName == "" {
-			colName = dbField.Name
-		}
-
-		// Look up the corresponding field in the domain model.
-		dField, found := lookupField(dType, colName)
-		if !found {
-			continue // No matching field found; skip.
-		}
-		dFieldVal := dVal.FieldByName(dField.Name)
-		if !dFieldVal.CanSet() {
-			continue
-		}
-
-		// If types are identical or assignable, set the value directly.
-		if dbFieldValue.Type().AssignableTo(dFieldVal.Type()) {
-			dFieldVal.Set(dbFieldValue)
-		} else if dbFieldValue.Type().ConvertibleTo(dFieldVal.Type()) {
-			dFieldVal.Set(dbFieldValue.Convert(dFieldVal.Type()))
-		} else {
-			// If types differ, try using a registered converter.
-			conv, found := getConverter(dbFieldValue.Type(), dFieldVal.Type())
-			if !found {
-				return fmt.Errorf("no converter registered for field %s: %s -> %s", dbField.Name, dbFieldValue.Type(), dFieldVal.Type())
-			}
-			converted, err := safeConvert(conv, dbFieldValue.Interface())
-			if err != nil {
-				return fmt.Errorf("converter error for field %s: %v", dbField.Name, err)
-			}
-			convVal := reflect.ValueOf(converted)
-			if !convVal.Type().AssignableTo(dFieldVal.Type()) {
-				return fmt.Errorf("converted value for field %s is not assignable to type %s", dbField.Name, dFieldVal.Type())
-			}
-			dFieldVal.Set(convVal)
-		}
-	}
-	return nil
-}
 
 // StructToDBMap converts any structure (e.g., a domain model) into a map[string]interface{}
 // for storing in the database. The schema is provided by a database model (dbSchema).

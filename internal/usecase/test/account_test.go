@@ -9,11 +9,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/config"
-	dbmocks "github.com/m11ano/avito-shop/internal/db/mocks"
 	"github.com/m11ano/avito-shop/internal/db/txmngr"
 	"github.com/m11ano/avito-shop/internal/domain"
 	"github.com/m11ano/avito-shop/internal/usecase"
-	"github.com/m11ano/avito-shop/internal/usecase/mocks"
+	"github.com/m11ano/avito-shop/test/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -23,14 +22,14 @@ import (
 
 type AccountTestSuite struct {
 	suite.Suite
-	mockPgxPool    *dbmocks.PgxPool
+	mockPgxPool    *mocks.PgxPool
 	accountService usecase.Account
 	app            *fx.App
 	mockRepo       *mocks.AccountRepository
 }
 
 func (s *AccountTestSuite) SetupTest() {
-	s.mockPgxPool = txmngr.NewPgxPoolMock()
+	s.mockPgxPool = mocks.NewPgxPoolMockForTxManager()
 	s.mockRepo = new(mocks.AccountRepository)
 
 	s.app = fx.New(
@@ -52,7 +51,7 @@ func (s *AccountTestSuite) TearDownTest() {
 	assert.NoError(s.T(), err)
 }
 
-func TestSuiteRun(t *testing.T) {
+func TestAccountSuiteRun(t *testing.T) {
 	suite.Run(t, new(AccountTestSuite))
 }
 
@@ -73,7 +72,7 @@ func (s *AccountTestSuite) TestGetItemByUsername__NotFound() {
 	s.mockRepo.On("FindItemByUsername", mock.Anything, "test").Return(nil, app.ErrNotFound)
 
 	account, err := s.accountService.GetItemByUsername(context.Background(), "test")
-	assert.ErrorIs(s.T(), app.ErrNotFound, err)
+	assert.ErrorIs(s.T(), err, app.ErrNotFound)
 	assert.Nil(s.T(), account)
 
 	s.mockRepo.AssertExpectations(s.T())

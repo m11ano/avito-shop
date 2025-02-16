@@ -1,4 +1,4 @@
-module github.com/m11ano/avito-shop/tests/loadtest
+module github.com/m11ano/avito-shop/test/load
 
 go 1.23.3
 
