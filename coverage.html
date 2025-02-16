@@ -65,19 +65,19 @@
 				
 				<option value="file4">github.com/m11ano/avito-shop/internal/bootstrap/inf_pgxv5.go (57.7%)</option>
 				
-				<option value="file5">github.com/m11ano/avito-shop/internal/delivery/http/controller/auth.go (75.0%)</option>
+				<option value="file5">github.com/m11ano/avito-shop/internal/delivery/http/controller/auth.go (93.8%)</option>
 				
-				<option value="file6">github.com/m11ano/avito-shop/internal/delivery/http/controller/buy.go (66.7%)</option>
+				<option value="file6">github.com/m11ano/avito-shop/internal/delivery/http/controller/buy.go (77.8%)</option>
 				
 				<option value="file7">github.com/m11ano/avito-shop/internal/delivery/http/controller/controller.go (100.0%)</option>
 				
-				<option value="file8">github.com/m11ano/avito-shop/internal/delivery/http/controller/info.go (0.0%)</option>
+				<option value="file8">github.com/m11ano/avito-shop/internal/delivery/http/controller/info.go (82.4%)</option>
 				
-				<option value="file9">github.com/m11ano/avito-shop/internal/delivery/http/controller/send_coin.go (65.4%)</option>
+				<option value="file9">github.com/m11ano/avito-shop/internal/delivery/http/controller/send_coin.go (80.8%)</option>
 				
 				<option value="file10">github.com/m11ano/avito-shop/internal/delivery/http/middleware/auth.go (91.7%)</option>
 				
-				<option value="file11">github.com/m11ano/avito-shop/internal/delivery/http/middleware/error_handler.go (70.0%)</option>
+				<option value="file11">github.com/m11ano/avito-shop/internal/delivery/http/middleware/error_handler.go (90.0%)</option>
 				
 				<option value="file12">github.com/m11ano/avito-shop/internal/delivery/http/middleware/logger.go (93.8%)</option>
 				
@@ -87,7 +87,7 @@
 				
 				<option value="file15">github.com/m11ano/avito-shop/internal/delivery/http/register_routes.go (100.0%)</option>
 				
-				<option value="file16">github.com/m11ano/avito-shop/internal/delivery/http/validation/format_errors.go (0.0%)</option>
+				<option value="file16">github.com/m11ano/avito-shop/internal/delivery/http/validation/format_errors.go (85.7%)</option>
 				
 				<option value="file17">github.com/m11ano/avito-shop/internal/delivery/http/validation/validator.go (100.0%)</option>
 				
@@ -111,15 +111,15 @@
 				
 				<option value="file27">github.com/m11ano/avito-shop/internal/infra/db/txmngr/tx_manager.go (100.0%)</option>
 				
-				<option value="file28">github.com/m11ano/avito-shop/internal/repository/account.go (35.4%)</option>
+				<option value="file28">github.com/m11ano/avito-shop/internal/repository/account.go (55.4%)</option>
 				
-				<option value="file29">github.com/m11ano/avito-shop/internal/repository/coin_transfer.go (27.4%)</option>
+				<option value="file29">github.com/m11ano/avito-shop/internal/repository/coin_transfer.go (46.8%)</option>
 				
 				<option value="file30">github.com/m11ano/avito-shop/internal/repository/operation.go (51.4%)</option>
 				
-				<option value="file31">github.com/m11ano/avito-shop/internal/repository/shop_item.go (17.6%)</option>
+				<option value="file31">github.com/m11ano/avito-shop/internal/repository/shop_item.go (41.2%)</option>
 				
-				<option value="file32">github.com/m11ano/avito-shop/internal/repository/shop_purchase.go (27.4%)</option>
+				<option value="file32">github.com/m11ano/avito-shop/internal/repository/shop_purchase.go (46.8%)</option>
 				
 				<option value="file33">github.com/m11ano/avito-shop/internal/usecase/account.go (100.0%)</option>
 				
@@ -460,7 +460,7 @@ type AuthHandlerIn struct {
 }
 
 func (ctrl *Controller) AuthHandlerValidate(in *AuthHandlerIn) (isOk bool, errMsg string) <span class="cov8" title="1">{
-        if err := ctrl.vldtr.Struct(in); err != nil </span><span class="cov0" title="0">{
+        if err := ctrl.vldtr.Struct(in); err != nil </span><span class="cov8" title="1">{
                 return validation.FormatErrors(err)
         }</span>
         <span class="cov8" title="1">return true, ""</span>
@@ -469,12 +469,12 @@ func (ctrl *Controller) AuthHandlerValidate(in *AuthHandlerIn) (isOk bool, errMs
 func (ctrl *Controller) AuthHandler(c *fiber.Ctx) error <span class="cov8" title="1">{
         in := &amp;AuthHandlerIn{}
 
-        if err := c.BodyParser(in); err != nil </span><span class="cov0" title="0">{
+        if err := c.BodyParser(in); err != nil </span><span class="cov8" title="1">{
                 return &amp;fiber.Error{Code: fiber.ErrBadRequest.Code, Message: err.Error()}
         }</span>
 
         <span class="cov8" title="1">ok, errMsg := ctrl.AuthHandlerValidate(in)
-        if !ok </span><span class="cov0" title="0">{
+        if !ok </span><span class="cov8" title="1">{
                 return &amp;fiber.Error{Code: fiber.ErrBadRequest.Code, Message: errMsg}
         }</span>
 
@@ -504,7 +504,7 @@ import (
 )
 
 func (ctrl *Controller) BuyHandler(c *fiber.Ctx) error <span class="cov8" title="1">{
-        if isAuth, ok := c.Locals("isAuth").(bool); !ok || !isAuth </span><span class="cov0" title="0">{
+        if isAuth, ok := c.Locals("isAuth").(bool); !ok || !isAuth </span><span class="cov8" title="1">{
                 return e.ErrUnauthorized
         }</span>
 
@@ -529,7 +529,7 @@ func (ctrl *Controller) BuyHandler(c *fiber.Ctx) error <span class="cov8" title=
                         return e.NewErrorFrom(e.ErrBadRequest).SetMessage(err.Error())</span>
                 case errors.Is(err, e.ErrConflict):<span class="cov0" title="0">
                         return e.NewErrorFrom(e.ErrBadRequest).SetMessage(err.Error())</span>
-                case errors.Is(err, e.ErrNotFound):<span class="cov0" title="0">
+                case errors.Is(err, e.ErrNotFound):<span class="cov8" title="1">
                         return e.NewErrorFrom(e.ErrBadRequest).SetMessage(err.Error())</span>
                 default:<span class="cov0" title="0">
                         return err</span>
@@ -607,18 +607,18 @@ type InfoHandlerOutCoinHistoryReceived struct {
         Amount   int64  `json:"amount"`
 }
 
-func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error <span class="cov0" title="0">{
-        if isAuth, ok := c.Locals("isAuth").(bool); !ok || !isAuth </span><span class="cov0" title="0">{
+func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error <span class="cov8" title="1">{
+        if isAuth, ok := c.Locals("isAuth").(bool); !ok || !isAuth </span><span class="cov8" title="1">{
                 return e.ErrUnauthorized
         }</span>
 
-        <span class="cov0" title="0">var accountID *uuid.UUID
+        <span class="cov8" title="1">var accountID *uuid.UUID
         var ok bool
         if accountID, ok = c.Locals("authAccountID").(*uuid.UUID); !ok </span><span class="cov0" title="0">{
                 return e.ErrUnauthorized
         }</span>
 
-        <span class="cov0" title="0">var err error
+        <span class="cov8" title="1">var err error
         out := InfoHandlerOut{}
 
         // Получаем баланс пользователя
@@ -629,30 +629,30 @@ func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error <span class="cov0" title
         }</span>
 
         // Получаем инвентарь и перекладываем в дто ответа
-        <span class="cov0" title="0">inventory, err := ctrl.usecaseShopPurchase.GetInventory(c.Context(), *accountID)
+        <span class="cov8" title="1">inventory, err := ctrl.usecaseShopPurchase.GetInventory(c.Context(), *accountID)
         if err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
 
-        <span class="cov0" title="0">out.Inventory = make([]InfoHandlerOutInventory, 0, len(inventory))
-        for _, item := range inventory </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">out.Inventory = make([]InfoHandlerOutInventory, 0, len(inventory))
+        for _, item := range inventory </span><span class="cov8" title="1">{
                 invItem := InfoHandlerOutInventory{
                         Quantity: item.Quantity,
                 }
-                if item.ShopItem != nil </span><span class="cov0" title="0">{
+                if item.ShopItem != nil </span><span class="cov8" title="1">{
                         invItem.Type = item.ShopItem.Name
                 }</span>
-                <span class="cov0" title="0">out.Inventory = append(out.Inventory, invItem)</span>
+                <span class="cov8" title="1">out.Inventory = append(out.Inventory, invItem)</span>
         }
 
         // Получаем агрегированную историю полученных монет и перекладываем в дто ответа
-        <span class="cov0" title="0">receivedCoinHistory, err := ctrl.usecaseCoinTransfer.GetAggrCoinHistory(c.Context(), *accountID, domain.CoinTransferTypeReciving)
+        <span class="cov8" title="1">receivedCoinHistory, err := ctrl.usecaseCoinTransfer.GetAggrCoinHistory(c.Context(), *accountID, domain.CoinTransferTypeReciving)
         if err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
 
-        <span class="cov0" title="0">out.CoinHistory.Received = make([]InfoHandlerOutCoinHistoryReceived, 0, len(receivedCoinHistory))
-        for _, item := range receivedCoinHistory </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">out.CoinHistory.Received = make([]InfoHandlerOutCoinHistoryReceived, 0, len(receivedCoinHistory))
+        for _, item := range receivedCoinHistory </span><span class="cov8" title="1">{
                 out.CoinHistory.Received = append(out.CoinHistory.Received, InfoHandlerOutCoinHistoryReceived{
                         FromUser: item.Account.Username,
                         Amount:   item.Amount,
@@ -660,20 +660,20 @@ func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error <span class="cov0" title
         }</span>
 
         // Получаем агрегированную историю отправленных монет и перекладываем в дто ответа
-        <span class="cov0" title="0">sentCoinHistory, err := ctrl.usecaseCoinTransfer.GetAggrCoinHistory(c.Context(), *accountID, domain.CoinTransferTypeSending)
+        <span class="cov8" title="1">sentCoinHistory, err := ctrl.usecaseCoinTransfer.GetAggrCoinHistory(c.Context(), *accountID, domain.CoinTransferTypeSending)
         if err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
 
-        <span class="cov0" title="0">out.CoinHistory.Sent = make([]InfoHandlerOutCoinHistorySent, 0, len(sentCoinHistory))
-        for _, item := range sentCoinHistory </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">out.CoinHistory.Sent = make([]InfoHandlerOutCoinHistorySent, 0, len(sentCoinHistory))
+        for _, item := range sentCoinHistory </span><span class="cov8" title="1">{
                 out.CoinHistory.Sent = append(out.CoinHistory.Sent, InfoHandlerOutCoinHistorySent{
                         ToUser: item.Account.Username,
                         Amount: item.Amount,
                 })
         }</span>
 
-        <span class="cov0" title="0">return c.JSON(out)</span>
+        <span class="cov8" title="1">return c.JSON(out)</span>
 }
 </pre>
 		
@@ -695,27 +695,27 @@ type SendCoinIn struct {
 }
 
 func (ctrl *Controller) SendCoinValidate(in *SendCoinIn) (bool, string) <span class="cov8" title="1">{
-        if err := ctrl.vldtr.Struct(in); err != nil </span><span class="cov0" title="0">{
+        if err := ctrl.vldtr.Struct(in); err != nil </span><span class="cov8" title="1">{
                 return validation.FormatErrors(err)
         }</span>
         <span class="cov8" title="1">return true, ""</span>
 }
 
 func (ctrl *Controller) SendCoinHandler(c *fiber.Ctx) error <span class="cov8" title="1">{
-        if isAuth, ok := c.Locals("isAuth").(bool); !ok || !isAuth </span><span class="cov0" title="0">{
+        if isAuth, ok := c.Locals("isAuth").(bool); !ok || !isAuth </span><span class="cov8" title="1">{
                 return e.ErrUnauthorized
         }</span>
 
         <span class="cov8" title="1">in := &amp;SendCoinIn{}
 
-        if err := c.BodyParser(in); err != nil </span><span class="cov0" title="0">{
+        if err := c.BodyParser(in); err != nil </span><span class="cov8" title="1">{
                 return &amp;fiber.Error{Code: fiber.ErrBadRequest.Code, Message: err.Error()}
         }</span>
 
         <span class="cov8" title="1">var ok bool
 
         ok, errMsg := ctrl.SendCoinValidate(in)
-        if !ok </span><span class="cov0" title="0">{
+        if !ok </span><span class="cov8" title="1">{
                 return &amp;fiber.Error{Code: fiber.ErrBadRequest.Code, Message: errMsg}
         }</span>
 
@@ -804,7 +804,7 @@ func ErrorHandler() func(*fiber.Ctx, error) error <span class="cov8" title="1">{
                 case *e.LogicError:<span class="cov8" title="1">
                         code = errTyped.Code()
                         json.Errors = errTyped.Error()</span>
-                case *fiber.Error:<span class="cov0" title="0">
+                case *fiber.Error:<span class="cov8" title="1">
                         code = errTyped.Code
                         json.Errors = err.Error()</span>
                 default:<span class="cov0" title="0">
@@ -974,19 +974,19 @@ import (
         "github.com/go-playground/validator/v10"
 )
 
-func FormatErrors(err error) (bool, string) <span class="cov0" title="0">{
+func FormatErrors(err error) (bool, string) <span class="cov8" title="1">{
         errors := make([]string, 0)
-        if validationErrors, ok := err.(validator.ValidationErrors); ok </span><span class="cov0" title="0">{
-                for _, e := range validationErrors </span><span class="cov0" title="0">{
+        if validationErrors, ok := err.(validator.ValidationErrors); ok </span><span class="cov8" title="1">{
+                for _, e := range validationErrors </span><span class="cov8" title="1">{
                         errors = append(errors, e.Error())
                 }</span>
         }
 
-        <span class="cov0" title="0">if len(errors) == 0 </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if len(errors) == 0 </span><span class="cov0" title="0">{
                 return true, ""
         }</span>
 
-        <span class="cov0" title="0">return false, strings.Join(errors, "; ")</span>
+        <span class="cov8" title="1">return false, strings.Join(errors, "; ")</span>
 }
 </pre>
 		
@@ -1427,14 +1427,14 @@ func (r *Account) FindItemByUsername(ctx context.Context, username string) (*dom
         return item, nil</span>
 }
 
-func (r *Account) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]domain.Account, error) <span class="cov0" title="0">{
+func (r *Account) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]domain.Account, error) <span class="cov8" title="1">{
         query, args, err := r.qb.Select(accountTableFields...).From(accountTable).Where(squirrel.Eq{"account_id": ids}).ToSql()
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
                 return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
+        <span class="cov8" title="1">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
@@ -1443,11 +1443,11 @@ func (r *Account) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid
                 <span class="cov0" title="0">return nil, convErr</span>
         }
 
-        <span class="cov0" title="0">defer rows.Close()
+        <span class="cov8" title="1">defer rows.Close()
 
         result := map[uuid.UUID]domain.Account{}
 
-        for rows.Next() </span><span class="cov0" title="0">{
+        for rows.Next() </span><span class="cov8" title="1">{
                 data := &amp;DBAccount{}
                 if err := pgxscan.ScanRow(data, rows); err != nil </span><span class="cov0" title="0">{
                         errIsConv, convErr := e.ErrConvertPgxToLogic(err)
@@ -1456,10 +1456,10 @@ func (r *Account) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid
                         }</span>
                         <span class="cov0" title="0">return nil, convErr</span>
                 }
-                <span class="cov0" title="0">domainItem := *r.dbToDomain(data)
+                <span class="cov8" title="1">domainItem := *r.dbToDomain(data)
                 result[domainItem.ID] = domainItem</span>
         }
-        <span class="cov0" title="0">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
                         r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
@@ -1467,7 +1467,7 @@ func (r *Account) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid
                 <span class="cov0" title="0">return nil, convErr</span>
         }
 
-        <span class="cov0" title="0">return result, nil</span>
+        <span class="cov8" title="1">return result, nil</span>
 }
 
 func (r *Account) Create(ctx context.Context, item *domain.Account) error <span class="cov8" title="1">{
@@ -1633,14 +1633,14 @@ type CoinTransferAggrCoinHistoryItem struct {
         TotalAmount int64     `db:"total_amount"`
 }
 
-func (r *CoinTransfer) GetAggrCoinHistoryByAccountID(ctx context.Context, accountID uuid.UUID, transferType domain.CoinTransferType) ([]usecase.CoinTransferRepositoryAggrHistoryItem, error) <span class="cov0" title="0">{
+func (r *CoinTransfer) GetAggrCoinHistoryByAccountID(ctx context.Context, accountID uuid.UUID, transferType domain.CoinTransferType) ([]usecase.CoinTransferRepositoryAggrHistoryItem, error) <span class="cov8" title="1">{
         query, args, err := r.qb.Select("counterparty_account_id", "SUM(amount) as total_amount").From(coinTransferTable).Where(squirrel.Eq{"owner_account_id": accountID, "transfer_type": transferType}).GroupBy("counterparty_account_id").ToSql()
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
                 return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
+        <span class="cov8" title="1">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
@@ -1649,11 +1649,11 @@ func (r *CoinTransfer) GetAggrCoinHistoryByAccountID(ctx context.Context, accoun
                 <span class="cov0" title="0">return nil, convErr</span>
         }
 
-        <span class="cov0" title="0">defer rows.Close()
+        <span class="cov8" title="1">defer rows.Close()
 
         result := make([]usecase.CoinTransferRepositoryAggrHistoryItem, 0)
 
-        for rows.Next() </span><span class="cov0" title="0">{
+        for rows.Next() </span><span class="cov8" title="1">{
                 data := CoinTransferAggrCoinHistoryItem{}
                 if err := pgxscan.ScanRow(&amp;data, rows); err != nil </span><span class="cov0" title="0">{
                         errIsConv, convErr := e.ErrConvertPgxToLogic(err)
@@ -1662,12 +1662,12 @@ func (r *CoinTransfer) GetAggrCoinHistoryByAccountID(ctx context.Context, accoun
                         }</span>
                         <span class="cov0" title="0">return nil, convErr</span>
                 }
-                <span class="cov0" title="0">result = append(result, usecase.CoinTransferRepositoryAggrHistoryItem{
+                <span class="cov8" title="1">result = append(result, usecase.CoinTransferRepositoryAggrHistoryItem{
                         AccountID: data.AccountID,
                         Amount:    data.TotalAmount,
                 })</span>
         }
-        <span class="cov0" title="0">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
                         r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
@@ -1675,7 +1675,7 @@ func (r *CoinTransfer) GetAggrCoinHistoryByAccountID(ctx context.Context, accoun
                 <span class="cov0" title="0">return nil, convErr</span>
         }
 
-        <span class="cov0" title="0">return result, nil</span>
+        <span class="cov8" title="1">return result, nil</span>
 }
 </pre>
 		
@@ -1995,12 +1995,12 @@ func (r *ShopItem) FindItemByName(ctx context.Context, name string) (*domain.Sho
 
         dbData := &amp;DBShopItem{}
 
-        if err := pgxscan.ScanOne(dbData, rows); err != nil </span><span class="cov0" title="0">{
+        if err := pgxscan.ScanOne(dbData, rows); err != nil </span><span class="cov8" title="1">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
                         r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
                 }</span>
-                <span class="cov0" title="0">return nil, convErr</span>
+                <span class="cov8" title="1">return nil, convErr</span>
         }
 
         <span class="cov8" title="1">item := r.dbToDomain(dbData)
@@ -2008,14 +2008,14 @@ func (r *ShopItem) FindItemByName(ctx context.Context, name string) (*domain.Sho
         return item, nil</span>
 }
 
-func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]domain.ShopItem, error) <span class="cov0" title="0">{
+func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]domain.ShopItem, error) <span class="cov8" title="1">{
         query, args, err := r.qb.Select(shopItemTableFields...).From(shopItemTable).Where(squirrel.Eq{"item_id": ids}).ToSql()
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
                 return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
+        <span class="cov8" title="1">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
@@ -2024,11 +2024,11 @@ func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uui
                 <span class="cov0" title="0">return nil, convErr</span>
         }
 
-        <span class="cov0" title="0">defer rows.Close()
+        <span class="cov8" title="1">defer rows.Close()
 
         result := map[uuid.UUID]domain.ShopItem{}
 
-        for rows.Next() </span><span class="cov0" title="0">{
+        for rows.Next() </span><span class="cov8" title="1">{
                 data := &amp;DBShopItem{}
                 if err := pgxscan.ScanRow(data, rows); err != nil </span><span class="cov0" title="0">{
                         errIsConv, convErr := e.ErrConvertPgxToLogic(err)
@@ -2037,10 +2037,10 @@ func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uui
                         }</span>
                         <span class="cov0" title="0">return nil, convErr</span>
                 }
-                <span class="cov0" title="0">domainItem := *r.dbToDomain(data)
+                <span class="cov8" title="1">domainItem := *r.dbToDomain(data)
                 result[domainItem.ID] = domainItem</span>
         }
-        <span class="cov0" title="0">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
                         r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
@@ -2048,7 +2048,7 @@ func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uui
                 <span class="cov0" title="0">return nil, convErr</span>
         }
 
-        <span class="cov0" title="0">return result, nil</span>
+        <span class="cov8" title="1">return result, nil</span>
 }
 </pre>
 		
@@ -2186,14 +2186,14 @@ type ShopPurchaseAggrInventoryItem struct {
         TotalQuantity int64     `db:"total_quantity"`
 }
 
-func (r *ShopPurchase) AggrInventoryByAccountID(ctx context.Context, accountID uuid.UUID) ([]usecase.ShopPurchaseRepositoryAggrInventoryItem, error) <span class="cov0" title="0">{
+func (r *ShopPurchase) AggrInventoryByAccountID(ctx context.Context, accountID uuid.UUID) ([]usecase.ShopPurchaseRepositoryAggrInventoryItem, error) <span class="cov8" title="1">{
         query, args, err := r.qb.Select("item_id", "SUM(quantity) as total_quantity").From(shopPurchaseTable).Where(squirrel.Eq{"account_id": accountID}).GroupBy("item_id").ToSql()
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
                 return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
+        <span class="cov8" title="1">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
@@ -2202,11 +2202,11 @@ func (r *ShopPurchase) AggrInventoryByAccountID(ctx context.Context, accountID u
                 <span class="cov0" title="0">return nil, convErr</span>
         }
 
-        <span class="cov0" title="0">defer rows.Close()
+        <span class="cov8" title="1">defer rows.Close()
 
         result := make([]usecase.ShopPurchaseRepositoryAggrInventoryItem, 0)
 
-        for rows.Next() </span><span class="cov0" title="0">{
+        for rows.Next() </span><span class="cov8" title="1">{
                 data := ShopPurchaseAggrInventoryItem{}
                 if err := pgxscan.ScanRow(&amp;data, rows); err != nil </span><span class="cov0" title="0">{
                         errIsConv, convErr := e.ErrConvertPgxToLogic(err)
@@ -2215,12 +2215,12 @@ func (r *ShopPurchase) AggrInventoryByAccountID(ctx context.Context, accountID u
                         }</span>
                         <span class="cov0" title="0">return nil, convErr</span>
                 }
-                <span class="cov0" title="0">result = append(result, usecase.ShopPurchaseRepositoryAggrInventoryItem{
+                <span class="cov8" title="1">result = append(result, usecase.ShopPurchaseRepositoryAggrInventoryItem{
                         ShopItemID: data.ItemID,
                         Quantity:   data.TotalQuantity,
                 })</span>
         }
-        <span class="cov0" title="0">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
                         r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
@@ -2228,7 +2228,7 @@ func (r *ShopPurchase) AggrInventoryByAccountID(ctx context.Context, accountID u
                 <span class="cov0" title="0">return nil, convErr</span>
         }
 
-        <span class="cov0" title="0">return result, nil</span>
+        <span class="cov8" title="1">return result, nil</span>
 }
 </pre>
 		

@@ -144,6 +144,63 @@ func (s *IntegrationTestSuite) TestCoinTransfer() {
 				},
 			},
 		},
+		// некорректные данные на вход
+		{
+			name:       "send coin with incorrect input",
+			timeoustMs: stdTimeout,
+			request: Request{
+				method: http.MethodPost,
+				path:   "/api/sendCoin",
+				headers: map[string]string{
+					"Authorization": token,
+				},
+				body: map[string]interface{}{
+					"toUser": "",
+					"amount": 0,
+				},
+			},
+			expectStatusCode: http.StatusBadRequest,
+		},
+		// отправка несуществующему пользователю
+		{
+			name:       "send coin to not exists user",
+			timeoustMs: stdTimeout,
+			request: Request{
+				method: http.MethodPost,
+				path:   "/api/sendCoin",
+				headers: map[string]string{
+					"Authorization": token,
+				},
+				body: map[string]interface{}{
+					"toUser": "not_exists",
+					"amount": 0,
+				},
+			},
+			expectStatusCode: http.StatusBadRequest,
+		},
+		// без данных на вход
+		{
+			name:       "send coin without input",
+			timeoustMs: stdTimeout,
+			request: Request{
+				method: http.MethodPost,
+				path:   "/api/sendCoin",
+				headers: map[string]string{
+					"Authorization": token,
+				},
+			},
+			expectStatusCode: http.StatusBadRequest,
+		},
+		// без токена авторизации
+		{
+			name:       "send coin without auth token",
+			timeoustMs: stdTimeout,
+			request: Request{
+				method: http.MethodPost,
+				path:   "/api/sendCoin",
+			},
+			expectStatusCode: http.StatusUnauthorized,
+		},
 	}
 
 	for _, testcase := range testcases {

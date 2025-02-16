@@ -103,7 +103,7 @@ func (s *IntegrationTestSuite) TestShopBuy() {
 		},
 		// недостаточно денег
 		{
-			name:       "not enough money",
+			name:       "buy shop item error: not enough money",
 			timeoustMs: stdTimeout,
 			request: Request{
 				method: http.MethodGet,
@@ -134,6 +134,29 @@ func (s *IntegrationTestSuite) TestShopBuy() {
 					assert.Equal(s.T(), initBalance-pen.Price*2, balance)
 				},
 			},
+		},
+		// без токена авторизации
+		{
+			name:       "buy shop item without auth token",
+			timeoustMs: stdTimeout,
+			request: Request{
+				method: http.MethodGet,
+				path:   "/api/buy/pen",
+			},
+			expectStatusCode: http.StatusUnauthorized,
+		},
+		// некорректный товар
+		{
+			name:       "buy inccorect shop item",
+			timeoustMs: stdTimeout,
+			request: Request{
+				method: http.MethodGet,
+				path:   "/api/buy/notexists",
+				headers: map[string]string{
+					"Authorization": token,
+				},
+			},
+			expectStatusCode: http.StatusBadRequest,
 		},
 	}
 

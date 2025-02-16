@@ -50,9 +50,7 @@ func (s *IntegrationTestSuite) TestSignInAndSignUp() {
 					assert.True(s.T(), valid)
 
 					accountID, ok := claims["accountID"]
-					if !ok {
-						s.T().Fatalf("accountID not found in claims")
-					}
+					assert.True(s.T(), ok)
 
 					var dbAccountID uuid.UUID
 					err = s.pgxpool.QueryRow(context.Background(), "SELECT account_id FROM account WHERE account_id = $1", accountID).Scan(&dbAccountID)
@@ -83,6 +81,30 @@ func (s *IntegrationTestSuite) TestSignInAndSignUp() {
 				},
 			},
 			expectStatusCode: http.StatusUnauthorized,
+		},
+		// некорректные данные на вход
+		{
+			name:       "auth with incorrect input",
+			timeoustMs: stdTimeout,
+			request: Request{
+				method: http.MethodPost,
+				path:   "/api/auth",
+				body: map[string]interface{}{
+					"username": "",
+					"password": "",
+				},
+			},
+			expectStatusCode: http.StatusBadRequest,
+		},
+		// без данных на вход
+		{
+			name:       "auth without input",
+			timeoustMs: stdTimeout,
+			request: Request{
+				method: http.MethodPost,
+				path:   "/api/auth",
+			},
+			expectStatusCode: http.StatusBadRequest,
 		},
 	}
 

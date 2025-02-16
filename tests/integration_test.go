@@ -27,14 +27,16 @@ import (
 
 type IntegrationTestSuite struct {
 	suite.Suite
-	config           config.Config
-	app              *fx.App
-	fiberApp         *fiber.App
-	pgxpool          *pgxpool.Pool
-	accountUsecase   usecase.Account
-	operationUsecase usecase.Operation
-	shopItemUsecase  usecase.ShopItem
-	authUsecase      usecase.Auth
+	config              config.Config
+	app                 *fx.App
+	fiberApp            *fiber.App
+	pgxpool             *pgxpool.Pool
+	accountUsecase      usecase.Account
+	operationUsecase    usecase.Operation
+	shopItemUsecase     usecase.ShopItem
+	shopPurchaseUsecase usecase.ShopPurchase
+	coinTransferUsecase usecase.CoinTransfer
+	authUsecase         usecase.Auth
 }
 
 func (s *IntegrationTestSuite) SetupTest() {
@@ -80,7 +82,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 			return s.config
 		}),
 		bootstrap.App,
-		fx.Populate(&s.fiberApp, &s.pgxpool, &s.accountUsecase, &s.operationUsecase, &s.shopItemUsecase, &s.authUsecase),
+		fx.Populate(&s.fiberApp, &s.pgxpool, &s.accountUsecase, &s.operationUsecase, &s.shopItemUsecase, &s.shopPurchaseUsecase, &s.coinTransferUsecase, &s.authUsecase),
 	)
 
 	err = s.app.Start(context.Background())
