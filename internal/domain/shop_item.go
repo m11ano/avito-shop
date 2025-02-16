@@ -7,3 +7,11 @@ type ShopItem struct {
 	Name  string
 	Price int64
 }
+
+func NewShopItem(name string, price int64) *ShopItem {
+	return &ShopItem{
+		ID:    uuid.New(),
+		Name:  name,
+		Price: price,
+	}
+}

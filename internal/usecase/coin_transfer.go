@@ -11,6 +11,8 @@ import (
 	"github.com/m11ano/avito-shop/internal/domain"
 )
 
+var ErrCoinTransferAmountMustBeGreaterThanZero = app.NewErrorFrom(app.ErrBadRequest).SetMessage("amount must be greater than zero")
+
 type CoinTransferGetAggrHistoryItem struct {
 	Account *domain.Account
 	Amount  int64
@@ -24,7 +26,7 @@ type CoinTransfer interface {
 
 type CoinTransferRepositoryAggrHistoryItem struct {
 	AccountID uuid.UUID
-	Ammount   int64
+	Amount    int64
 }
 
 //go:generate mockery --name=CoinTransferRepository --output=../../tests/mocks --case=underscore
@@ -56,10 +58,14 @@ func NewCoinTransferInpl(logger *slog.Logger, config config.Config, txManager *m
 }
 
 // Make coin transfer from owner to target
-func (uc *CoinTransferInpl) MakeTransferByUsername(ctx context.Context, targetAccountUsername string, ownerAccountID uuid.UUID, ammount int64, identityKey *uuid.UUID) (*domain.CoinTransfer, *domain.CoinTransfer, error) {
+func (uc *CoinTransferInpl) MakeTransferByUsername(ctx context.Context, targetAccountUsername string, ownerAccountID uuid.UUID, amount int64, identityKey *uuid.UUID) (*domain.CoinTransfer, *domain.CoinTransfer, error) {
 	var err error
 	var transferForOwner *domain.CoinTransfer
 	var transferForTarget *domain.CoinTransfer
+
+	if amount <= 0 {
+		return nil, nil, ErrCoinTransferAmountMustBeGreaterThanZero
+	}
 
 	err = uc.txManager.Do(ctx, func(ctx context.Context) error {
 		if identityKey != nil {
@@ -82,11 +88,11 @@ func (uc *CoinTransferInpl) MakeTransferByUsername(ctx context.Context, targetAc
 			return app.NewErrorFrom(app.ErrConflict).SetMessage("cant send coin to yourself")
 		}
 
-		transferForTarget = domain.NewCoinTransfer(domain.CoinTransferTypeReciving, ownerAccountID, targetAccount.ID, ammount, identityKey)
-		transferForOwner = domain.NewCoinTransfer(domain.CoinTransferTypeSending, targetAccount.ID, ownerAccountID, ammount, identityKey)
+		transferForOwner = domain.NewCoinTransfer(domain.CoinTransferTypeSending, targetAccount.ID, ownerAccountID, amount, identityKey)
+		transferForTarget = domain.NewCoinTransfer(domain.CoinTransferTypeReciving, ownerAccountID, targetAccount.ID, amount, identityKey)
 
-		operationForTarget := domain.NewOperation(domain.OperationTypeIncrease, targetAccount.ID, ammount, domain.OperationSourceTypeTransfer, &transferForTarget.ID)
-		operationForOwner := domain.NewOperation(domain.OperationTypeDecrease, ownerAccountID, ammount, domain.OperationSourceTypeTransfer, &transferForOwner.ID)
+		operationForOwner := domain.NewOperation(domain.OperationTypeDecrease, ownerAccountID, amount, domain.OperationSourceTypeTransfer, &transferForOwner.ID)
+		operationForTarget := domain.NewOperation(domain.OperationTypeIncrease, targetAccount.ID, amount, domain.OperationSourceTypeTransfer, &transferForTarget.ID)
 
 		_, err = uc.usecaseOperation.SaveOperation(ctx, operationForOwner)
 		if err != nil {
@@ -139,7 +145,7 @@ func (uc *CoinTransferInpl) GetAggrCoinHistory(ctx context.Context, accountID uu
 
 	for _, item := range history {
 		resultItem := CoinTransferGetAggrHistoryItem{
-			Amount: item.Ammount,
+			Amount: item.Amount,
 		}
 		if accountItem, ok := accountItems[item.AccountID]; ok {
 			resultItem.Account = &accountItem

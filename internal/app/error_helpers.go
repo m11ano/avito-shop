@@ -9,7 +9,7 @@ import (
 
 func ErrCheckIsTxСoncurrentExec(err error) bool {
 	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "40001" || pgErr.Code == "25P02" {
+	if errors.As(err, &pgErr) && (pgErr.Code == "40001" || pgErr.Code == "25P02") {
 		return true
 	}
 	return errors.Is(err, ErrTxСoncurrentExec)

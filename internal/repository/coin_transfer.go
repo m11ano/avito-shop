@@ -165,7 +165,7 @@ func (r *CoinTransfer) GetAggrCoinHistoryByAccountID(ctx context.Context, accoun
 		}
 		result = append(result, usecase.CoinTransferRepositoryAggrHistoryItem{
 			AccountID: data.AccountID,
-			Ammount:   data.TotalAmount,
+			Amount:    data.TotalAmount,
 		})
 	}
 	if err := rows.Err(); err != nil {
