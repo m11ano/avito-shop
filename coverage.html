@@ -57,15 +57,15 @@
 				
 				<option value="file0">github.com/m11ano/avito-shop/cmd/app/main.go (0.0%)</option>
 				
-				<option value="file1">github.com/m11ano/avito-shop/internal/bootstrap/app.go (72.0%)</option>
+				<option value="file1">github.com/m11ano/avito-shop/internal/bootstrap/app.go (56.7%)</option>
 				
 				<option value="file2">github.com/m11ano/avito-shop/internal/bootstrap/inf_http_fiber.go (90.0%)</option>
 				
-				<option value="file3">github.com/m11ano/avito-shop/internal/bootstrap/inf_logger.go (83.3%)</option>
+				<option value="file3">github.com/m11ano/avito-shop/internal/bootstrap/inf_logger.go (71.4%)</option>
 				
 				<option value="file4">github.com/m11ano/avito-shop/internal/bootstrap/inf_pgxv5.go (57.7%)</option>
 				
-				<option value="file5">github.com/m11ano/avito-shop/internal/delivery/http/controller/auth.go (0.0%)</option>
+				<option value="file5">github.com/m11ano/avito-shop/internal/delivery/http/controller/auth.go (75.0%)</option>
 				
 				<option value="file6">github.com/m11ano/avito-shop/internal/delivery/http/controller/buy.go (0.0%)</option>
 				
@@ -75,15 +75,15 @@
 				
 				<option value="file9">github.com/m11ano/avito-shop/internal/delivery/http/controller/send_coin.go (0.0%)</option>
 				
-				<option value="file10">github.com/m11ano/avito-shop/internal/delivery/http/middleware/auth.go (8.3%)</option>
+				<option value="file10">github.com/m11ano/avito-shop/internal/delivery/http/middleware/auth.go (50.0%)</option>
 				
-				<option value="file11">github.com/m11ano/avito-shop/internal/delivery/http/middleware/error_handler.go (10.0%)</option>
+				<option value="file11">github.com/m11ano/avito-shop/internal/delivery/http/middleware/error_handler.go (70.0%)</option>
 				
-				<option value="file12">github.com/m11ano/avito-shop/internal/delivery/http/middleware/logger.go (6.2%)</option>
+				<option value="file12">github.com/m11ano/avito-shop/internal/delivery/http/middleware/logger.go (93.8%)</option>
 				
-				<option value="file13">github.com/m11ano/avito-shop/internal/delivery/http/middleware/recovery.go (7.7%)</option>
+				<option value="file13">github.com/m11ano/avito-shop/internal/delivery/http/middleware/recovery.go (30.8%)</option>
 				
-				<option value="file14">github.com/m11ano/avito-shop/internal/delivery/http/middleware/trace_id.go (16.7%)</option>
+				<option value="file14">github.com/m11ano/avito-shop/internal/delivery/http/middleware/trace_id.go (100.0%)</option>
 				
 				<option value="file15">github.com/m11ano/avito-shop/internal/delivery/http/register_routes.go (100.0%)</option>
 				
@@ -111,11 +111,11 @@
 				
 				<option value="file27">github.com/m11ano/avito-shop/internal/infra/db/txmngr/tx_manager.go (100.0%)</option>
 				
-				<option value="file28">github.com/m11ano/avito-shop/internal/repository/account.go (3.1%)</option>
+				<option value="file28">github.com/m11ano/avito-shop/internal/repository/account.go (35.4%)</option>
 				
 				<option value="file29">github.com/m11ano/avito-shop/internal/repository/coin_transfer.go (3.2%)</option>
 				
-				<option value="file30">github.com/m11ano/avito-shop/internal/repository/operation.go (2.8%)</option>
+				<option value="file30">github.com/m11ano/avito-shop/internal/repository/operation.go (50.0%)</option>
 				
 				<option value="file31">github.com/m11ano/avito-shop/internal/repository/shop_item.go (2.9%)</option>
 				
@@ -213,6 +213,7 @@ import (
         "context"
         "fmt"
         "log/slog"
+        "os"
         "runtime/debug"
         "time"
 
@@ -224,11 +225,20 @@ import (
         "github.com/m11ano/avito-shop/internal/infra/db/migrations"
         "github.com/m11ano/avito-shop/internal/infra/db/txmngr"
         "go.uber.org/fx"
+        "go.uber.org/fx/fxevent"
 )
 
 var App = fx.Options(
         // Инфраструктура
         fx.Provide(NewLogger),
+        fx.WithLogger(func(config config.Config) fxevent.Logger <span class="cov8" title="1">{
+                if !config.App.UseLogger </span><span class="cov8" title="1">{
+                        return fxevent.NopLogger
+                }</span>
+                <span class="cov0" title="0">return &amp;fxevent.ConsoleLogger{
+                        W: os.Stdout,
+                }</span>
+        }),
         fx.Provide(NewPgxv5),
         fx.Provide(func(config config.Config, logger *slog.Logger) *fiber.App <span class="cov8" title="1">{
                 fiberApp := NewHTTPFiber(HTTPConfig{
@@ -265,24 +275,28 @@ var App = fx.Options(
                                         return err
                                 }</span>
 
-                                <span class="cov8" title="1">go func() </span><span class="cov8" title="1">{
-                                        if err := fiberApp.Listen(fmt.Sprintf(":%d", config.HTTP.Port)); err != nil </span><span class="cov0" title="0">{
-                                                logger.Error("failed to start fiber", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
-                                                err := shutdowner.Shutdown()
-                                                if err != nil </span><span class="cov0" title="0">{
-                                                        logger.Error("failed to shutdown", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
-                                                }</span>
-                                        }
-                                }()
+                                <span class="cov8" title="1">if config.HTTP.Port &gt; 0 </span><span class="cov0" title="0">{
+                                        go func() </span><span class="cov0" title="0">{
+                                                if err := fiberApp.Listen(fmt.Sprintf(":%d", config.HTTP.Port)); err != nil </span><span class="cov0" title="0">{
+                                                        logger.Error("failed to start fiber", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
+                                                        err := shutdowner.Shutdown()
+                                                        if err != nil </span><span class="cov0" title="0">{
+                                                                logger.Error("failed to shutdown", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
+                                                        }</span>
+                                                }
+                                        }()
+                                }
 
                                 <span class="cov8" title="1">return nil</span>
                         },
                         OnStop: func(_ context.Context) error <span class="cov8" title="1">{
-                                logger.Info("stopping HTTP Fiber")
-                                err := fiberApp.ShutdownWithTimeout(time.Duration(config.HTTP.StopTimeout) * time.Second)
-                                if err != nil </span><span class="cov0" title="0">{
-                                        logger.Error("failed to stop fiber", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
-                                }</span>
+                                if config.HTTP.Port &gt; 0 </span><span class="cov0" title="0">{
+                                        logger.Info("stopping HTTP Fiber")
+                                        err := fiberApp.ShutdownWithTimeout(time.Duration(config.HTTP.StopTimeout) * time.Second)
+                                        if err != nil </span><span class="cov0" title="0">{
+                                                logger.Error("failed to stop fiber", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
+                                        }</span>
+                                }
 
                                 <span class="cov8" title="1">logger.Info("stopping Postgress")
                                 dbpool.Close()
@@ -337,19 +351,23 @@ func NewHTTPFiber(httpCfg HTTPConfig, logger *slog.Logger) *fiber.App <span clas
 		<pre class="file" id="file3" style="display: none">package bootstrap
 
 import (
+        "io"
         "log/slog"
-        "os"
 
         "github.com/m11ano/avito-shop/internal/infra/config"
 )
 
 func NewLogger(config config.Config) *slog.Logger <span class="cov8" title="1">{
         var handler slog.Handler
-        if !config.App.IsProd </span><span class="cov0" title="0">{
-                handler = slog.NewTextHandler(os.Stdout, nil)
-        }</span> else<span class="cov8" title="1"> {
-                handler = slog.NewJSONHandler(os.Stdout, nil)
-        }</span>
+        switch </span>{
+        case !config.App.UseLogger:<span class="cov8" title="1">
+                handler = slog.NewTextHandler(io.Discard, nil)</span>
+        case config.App.IsProd:<span class="cov0" title="0">
+                handler = slog.NewJSONHandler(io.Discard, nil)</span>
+        default:<span class="cov0" title="0">
+                handler = slog.NewTextHandler(io.Discard, nil)</span>
+        }
+
         <span class="cov8" title="1">logger := slog.New(handler)
         return logger</span>
 }
@@ -440,34 +458,34 @@ type AuthHandlerIn struct {
         Password string `json:"password" validate:"required,max=255"`
 }
 
-func (ctrl *Controller) AuthHandlerValidate(in *AuthHandlerIn) (isOk bool, errMsg string) <span class="cov0" title="0">{
+func (ctrl *Controller) AuthHandlerValidate(in *AuthHandlerIn) (isOk bool, errMsg string) <span class="cov8" title="1">{
         if err := ctrl.vldtr.Struct(in); err != nil </span><span class="cov0" title="0">{
                 return validation.FormatErrors(err)
         }</span>
-        <span class="cov0" title="0">return true, ""</span>
+        <span class="cov8" title="1">return true, ""</span>
 }
 
-func (ctrl *Controller) AuthHandler(c *fiber.Ctx) error <span class="cov0" title="0">{
+func (ctrl *Controller) AuthHandler(c *fiber.Ctx) error <span class="cov8" title="1">{
         in := &amp;AuthHandlerIn{}
 
         if err := c.BodyParser(in); err != nil </span><span class="cov0" title="0">{
                 return &amp;fiber.Error{Code: fiber.ErrBadRequest.Code, Message: err.Error()}
         }</span>
 
-        <span class="cov0" title="0">ok, errMsg := ctrl.AuthHandlerValidate(in)
+        <span class="cov8" title="1">ok, errMsg := ctrl.AuthHandlerValidate(in)
         if !ok </span><span class="cov0" title="0">{
                 return &amp;fiber.Error{Code: fiber.ErrBadRequest.Code, Message: errMsg}
         }</span>
 
-        <span class="cov0" title="0">jwtToken, err := ctrl.usecaseAuth.SignInOrSignUp(c.Context(), in.Username, in.Password)
-        if err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">jwtToken, err := ctrl.usecaseAuth.SignInOrSignUp(c.Context(), in.Username, in.Password)
+        if err != nil </span><span class="cov8" title="1">{
                 if errors.Is(err, e.ErrInternal) </span><span class="cov0" title="0">{
                         return err
                 }</span>
-                <span class="cov0" title="0">return e.ErrUnauthorized</span>
+                <span class="cov8" title="1">return e.ErrUnauthorized</span>
         }
 
-        <span class="cov0" title="0">out := AuthHandlerOut{Token: jwtToken}
+        <span class="cov8" title="1">out := AuthHandlerOut{Token: jwtToken}
 
         return c.JSON(out)</span>
 }
@@ -737,7 +755,7 @@ import (
 )
 
 func Auth(authUsecase usecase.Auth) func(*fiber.Ctx) error <span class="cov8" title="1">{
-        return func(c *fiber.Ctx) error </span><span class="cov0" title="0">{
+        return func(c *fiber.Ctx) error </span><span class="cov8" title="1">{
                 isAuth := false
 
                 AuthorizationHeader := strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
@@ -754,7 +772,7 @@ func Auth(authUsecase usecase.Auth) func(*fiber.Ctx) error <span class="cov8" ti
                         }</span>
                 }
 
-                <span class="cov0" title="0">c.Locals("isAuth", isAuth)
+                <span class="cov8" title="1">c.Locals("isAuth", isAuth)
 
                 return c.Next()</span>
         }
@@ -773,12 +791,12 @@ type errorJSON struct {
 }
 
 func ErrorHandler() func(*fiber.Ctx, error) error <span class="cov8" title="1">{
-        return func(c *fiber.Ctx, err error) error </span><span class="cov0" title="0">{
+        return func(c *fiber.Ctx, err error) error </span><span class="cov8" title="1">{
                 json := errorJSON{}
                 code := 500
 
                 switch errTyped := err.(type) </span>{
-                case *e.LogicError:<span class="cov0" title="0">
+                case *e.LogicError:<span class="cov8" title="1">
                         code = errTyped.Code()
                         json.Errors = errTyped.Error()</span>
                 case *fiber.Error:<span class="cov0" title="0">
@@ -788,7 +806,7 @@ func ErrorHandler() func(*fiber.Ctx, error) error <span class="cov8" title="1">{
                         json.Errors = "internal error"</span>
                 }
 
-                <span class="cov0" title="0">return c.Status(code).JSON(json)</span>
+                <span class="cov8" title="1">return c.Status(code).JSON(json)</span>
         }
 }
 </pre>
@@ -813,17 +831,17 @@ type LogRequestData struct {
 }
 
 func Logger(logger *slog.Logger) func(*fiber.Ctx) error <span class="cov8" title="1">{
-        return func(c *fiber.Ctx) error </span><span class="cov0" title="0">{
+        return func(c *fiber.Ctx) error </span><span class="cov8" title="1">{
                 result := c.Next()
 
-                if result != nil </span><span class="cov0" title="0">{
+                if result != nil </span><span class="cov8" title="1">{
                         err := c.App().ErrorHandler(c, result)
                         if err != nil </span><span class="cov0" title="0">{
                                 logger.ErrorContext(c.Context(), "failed to call fiber error handler", slog.Any("error", err), slog.Any("trackeback", string(debug.Stack())))
                         }</span>
                 }
 
-                <span class="cov0" title="0">code := c.Response().StatusCode()
+                <span class="cov8" title="1">code := c.Response().StatusCode()
 
                 logRequestData := LogRequestData{
                         Method: c.Method(),
@@ -833,25 +851,25 @@ func Logger(logger *slog.Logger) func(*fiber.Ctx) error <span class="cov8" title
                 }
 
                 requestID := c.Locals("requestID")
-                if requestID, ok := requestID.(*uuid.UUID); ok </span><span class="cov0" title="0">{
+                if requestID, ok := requestID.(*uuid.UUID); ok </span><span class="cov8" title="1">{
                         logRequestData.RequestID = requestID.String()
                 }</span>
 
-                <span class="cov0" title="0">go doLogging(c.Context(), logger, code, logRequestData)
+                <span class="cov8" title="1">go doLogging(c.Context(), logger, code, logRequestData)
 
                 return nil</span>
         }
 }
 
-func doLogging(ctx context.Context, logger *slog.Logger, code int, data LogRequestData) <span class="cov0" title="0">{
-        if code &gt;= 400 </span><span class="cov0" title="0">{
+func doLogging(ctx context.Context, logger *slog.Logger, code int, data LogRequestData) <span class="cov8" title="1">{
+        if code &gt;= 400 </span><span class="cov8" title="1">{
                 logger.ErrorContext(
                         ctx,
                         "http response: error",
                         slog.Int("reponseCode", code),
                         slog.Any("request", data),
                 )
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 logger.InfoContext(
                         ctx,
                         "http response: success",
@@ -874,8 +892,8 @@ import (
 )
 
 func Recovery(logger *slog.Logger) func(*fiber.Ctx) error <span class="cov8" title="1">{
-        return func(c *fiber.Ctx) error </span><span class="cov0" title="0">{
-                defer func() </span><span class="cov0" title="0">{
+        return func(c *fiber.Ctx) error </span><span class="cov8" title="1">{
+                defer func() </span><span class="cov8" title="1">{
                         if errRec := recover(); errRec != nil </span><span class="cov0" title="0">{
                                 var err error
                                 switch errData := errRec.(type) </span>{
@@ -896,7 +914,7 @@ func Recovery(logger *slog.Logger) func(*fiber.Ctx) error <span class="cov8" tit
                         }
                 }()
 
-                <span class="cov0" title="0">return c.Next()</span>
+                <span class="cov8" title="1">return c.Next()</span>
         }
 }
 </pre>
@@ -909,13 +927,13 @@ import (
 )
 
 func TraceID() func(*fiber.Ctx) error <span class="cov8" title="1">{
-        return func(c *fiber.Ctx) error </span><span class="cov0" title="0">{
+        return func(c *fiber.Ctx) error </span><span class="cov8" title="1">{
                 requestID, err := uuid.Parse(c.Get("X-Request-ID"))
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         requestID = uuid.New()
                 }</span>
 
-                <span class="cov0" title="0">c.Locals("requestID", &amp;requestID)
+                <span class="cov8" title="1">c.Locals("requestID", &amp;requestID)
 
                 return c.Next()</span>
         }
@@ -1175,6 +1193,7 @@ type Config struct {
                 StartTimeout int  `yaml:"start_timeout" env:"APP_START_TIMEOUT" env-default:"60"`
                 StopTimeout  int  `yaml:"stop_timeout" env:"APP_STOP_TIMEOUT" env-default:"10"`
                 IsProd       bool `yaml:"is_prod" env:"APP_IS_PROD" env-default:"false"`
+                UseLogger    bool `yaml:"use_logger" env:"APP_USE_LOGGER" env-default:"true"`
         } `yaml:"app"`
         DB struct {
                 URI                 string `yaml:"uri" env:"DB_URI"`
@@ -1359,7 +1378,7 @@ func NewAccount(logger *slog.Logger, db *pgxpool.Pool, txc *trmpgx.CtxGetter) *A
         }
 }</span>
 
-func (r *Account) dbToDomain(db *DBAccount) *domain.Account <span class="cov0" title="0">{
+func (r *Account) dbToDomain(db *DBAccount) *domain.Account <span class="cov8" title="1">{
         return &amp;domain.Account{
                 ID:           db.ID,
                 Username:     db.Username,
@@ -1369,14 +1388,14 @@ func (r *Account) dbToDomain(db *DBAccount) *domain.Account <span class="cov0" t
         }
 }</span>
 
-func (r *Account) FindItemByUsername(ctx context.Context, username string) (*domain.Account, error) <span class="cov0" title="0">{
+func (r *Account) FindItemByUsername(ctx context.Context, username string) (*domain.Account, error) <span class="cov8" title="1">{
         query, args, err := r.qb.Select(accountTableFields...).From(accountTable).Where(squirrel.Eq{"username": username}).Limit(1).ToSql()
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
                 return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
+        <span class="cov8" title="1">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
@@ -1385,19 +1404,19 @@ func (r *Account) FindItemByUsername(ctx context.Context, username string) (*dom
                 <span class="cov0" title="0">return nil, convErr</span>
         }
 
-        <span class="cov0" title="0">defer rows.Close()
+        <span class="cov8" title="1">defer rows.Close()
 
         dbData := &amp;DBAccount{}
 
-        if err := pgxscan.ScanOne(dbData, rows); err != nil </span><span class="cov0" title="0">{
+        if err := pgxscan.ScanOne(dbData, rows); err != nil </span><span class="cov8" title="1">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
                         r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
                 }</span>
-                <span class="cov0" title="0">return nil, convErr</span>
+                <span class="cov8" title="1">return nil, convErr</span>
         }
 
-        <span class="cov0" title="0">item := r.dbToDomain(dbData)
+        <span class="cov8" title="1">item := r.dbToDomain(dbData)
 
         return item, nil</span>
 }
@@ -1445,13 +1464,13 @@ func (r *Account) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid
         <span class="cov0" title="0">return result, nil</span>
 }
 
-func (r *Account) Create(ctx context.Context, item *domain.Account) error <span class="cov0" title="0">{
+func (r *Account) Create(ctx context.Context, item *domain.Account) error <span class="cov8" title="1">{
         dataMap, err := dbhelper.StructToDBMap(item, accountDBSchema)
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "convert struct to db map", slog.Any("error", err))
                 return e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
-        <span class="cov0" title="0">dataMap["updated_at"] = time.Now()
+        <span class="cov8" title="1">dataMap["updated_at"] = time.Now()
 
         query, args, err := r.qb.Insert(accountTable).SetMap(dataMap).ToSql()
         if err != nil </span><span class="cov0" title="0">{
@@ -1459,7 +1478,7 @@ func (r *Account) Create(ctx context.Context, item *domain.Account) error <span 
                 return e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
+        <span class="cov8" title="1">_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
@@ -1468,7 +1487,7 @@ func (r *Account) Create(ctx context.Context, item *domain.Account) error <span 
                 <span class="cov0" title="0">return convErr</span>
         }
 
-        <span class="cov0" title="0">return nil</span>
+        <span class="cov8" title="1">return nil</span>
 }
 </pre>
 		
@@ -1734,31 +1753,31 @@ func (r *Operation) dbToDomain(db *DBOperation) *domain.Operation <span class="c
         <span class="cov0" title="0">return item</span>
 }
 
-func (r *Operation) domainToDB(item *domain.Operation) (map[string]interface{}, error) <span class="cov0" title="0">{
+func (r *Operation) domainToDB(item *domain.Operation) (map[string]interface{}, error) <span class="cov8" title="1">{
         dataMap, err := dbhelper.StructToDBMap(item, operationDBSchema)
         if err != nil </span><span class="cov0" title="0">{
                 return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">if item.Type == domain.OperationTypeDecrease </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if item.Type == domain.OperationTypeDecrease </span><span class="cov0" title="0">{
                 dataMap["amount"] = -item.Amount
         }</span>
 
-        <span class="cov0" title="0">return dataMap, nil</span>
+        <span class="cov8" title="1">return dataMap, nil</span>
 }
 
 type OperationGetBalanceDTO struct {
         Balance int64 `db:"balance"`
 }
 
-func (r *Operation) GetBalanceByAccountID(ctx context.Context, accountID uuid.UUID) (int64, bool, error) <span class="cov0" title="0">{
+func (r *Operation) GetBalanceByAccountID(ctx context.Context, accountID uuid.UUID) (int64, bool, error) <span class="cov8" title="1">{
         query, args, err := r.qb.Select("balance").From(operationBalanceTable).Where(squirrel.Eq{"account_id": accountID}).Limit(1).ToSql()
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
                 return 0, false, e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
+        <span class="cov8" title="1">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
@@ -1767,7 +1786,7 @@ func (r *Operation) GetBalanceByAccountID(ctx context.Context, accountID uuid.UU
                 <span class="cov0" title="0">return 0, false, convErr</span>
         }
 
-        <span class="cov0" title="0">defer rows.Close()
+        <span class="cov8" title="1">defer rows.Close()
 
         dbData := &amp;OperationGetBalanceDTO{}
 
@@ -1782,11 +1801,11 @@ func (r *Operation) GetBalanceByAccountID(ctx context.Context, accountID uuid.UU
                 <span class="cov0" title="0">return 0, false, convErr</span>
         }
 
-        <span class="cov0" title="0">return dbData.Balance, true, nil</span>
+        <span class="cov8" title="1">return dbData.Balance, true, nil</span>
 }
 
 // Внутренний метод, обновить баланс по логу операций
-func (r *Operation) updateBalanceByAccountID(ctx context.Context, accountID uuid.UUID) error <span class="cov0" title="0">{
+func (r *Operation) updateBalanceByAccountID(ctx context.Context, accountID uuid.UUID) error <span class="cov8" title="1">{
         updateQuery := squirrel.Expr("INSERT INTO operation_balance (account_id, balance) VALUES ($1, (SELECT COALESCE(SUM(amount), 0) FROM operation WHERE account_id = $1)) ON CONFLICT (account_id) DO UPDATE SET balance = (SELECT COALESCE(SUM(amount), 0) FROM operation WHERE account_id = $1)", accountID)
 
         query, args, err := updateQuery.ToSql()
@@ -1795,7 +1814,7 @@ func (r *Operation) updateBalanceByAccountID(ctx context.Context, accountID uuid
                 return e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
+        <span class="cov8" title="1">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 fmt.Println("CATCH")
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
@@ -1805,29 +1824,29 @@ func (r *Operation) updateBalanceByAccountID(ctx context.Context, accountID uuid
                 <span class="cov0" title="0">return convErr</span>
         }
 
-        <span class="cov0" title="0">defer rows.Close()
+        <span class="cov8" title="1">defer rows.Close()
 
         return nil</span>
 }
 
-func (r *Operation) Create(ctx context.Context, item *domain.Operation) (int64, error) <span class="cov0" title="0">{
+func (r *Operation) Create(ctx context.Context, item *domain.Operation) (int64, error) <span class="cov8" title="1">{
         dataMap, err := r.domainToDB(item)
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "convert struct to db map", slog.Any("error", err))
                 return 0, err
         }</span>
 
-        <span class="cov0" title="0">var balance int64
+        <span class="cov8" title="1">var balance int64
 
         // DOTO: подумать целесообразности ретраев при возникновении блокировки
-        err = r.txManager.Do(ctx, func(ctx context.Context) error </span><span class="cov0" title="0">{
+        err = r.txManager.Do(ctx, func(ctx context.Context) error </span><span class="cov8" title="1">{
                 query, args, err := r.qb.Insert(operationTable).SetMap(dataMap).ToSql()
                 if err != nil </span><span class="cov0" title="0">{
                         r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
                         return e.NewErrorFrom(e.ErrInternal).Wrap(err)
                 }</span>
 
-                <span class="cov0" title="0">_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
+                <span class="cov8" title="1">_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
                 if err != nil </span><span class="cov0" title="0">{
                         errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                         if !errIsConv </span><span class="cov0" title="0">{
@@ -1837,24 +1856,24 @@ func (r *Operation) Create(ctx context.Context, item *domain.Operation) (int64, 
                 }
 
                 // Если две конкурирующие транзакции попытаются обновить баланс аккаунта - одна из них получит блокировку
-                <span class="cov0" title="0">err = r.updateBalanceByAccountID(ctx, item.AccountID)
+                <span class="cov8" title="1">err = r.updateBalanceByAccountID(ctx, item.AccountID)
                 if err != nil </span><span class="cov0" title="0">{
                         return err
                 }</span>
 
                 // Далее если транзакция получила блокировку, здесь при попытке чтения вызовется ошибка
-                <span class="cov0" title="0">balance, _, err = r.GetBalanceByAccountID(ctx, item.AccountID)
+                <span class="cov8" title="1">balance, _, err = r.GetBalanceByAccountID(ctx, item.AccountID)
                 if err != nil </span><span class="cov0" title="0">{
                         return err
                 }</span>
 
-                <span class="cov0" title="0">return nil</span>
+                <span class="cov8" title="1">return nil</span>
         })
-        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
                 return 0, err
         }</span>
 
-        <span class="cov0" title="0">return balance, nil</span>
+        <span class="cov8" title="1">return balance, nil</span>
 }
 </pre>
 		
