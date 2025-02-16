@@ -23,7 +23,7 @@ var App = fx.Options(
 	// Инфраструктура
 	fx.Provide(NewLogger),
 	fx.WithLogger(func(config config.Config) fxevent.Logger {
-		if !config.App.UseLogger {
+		if !config.App.UseFxLogger {
 			return fxevent.NopLogger
 		}
 		return &fxevent.ConsoleLogger{

@@ -2,6 +2,7 @@ app:
     is_prod: true
     start_timeout: 60
     stop_timeout: 10
+    use_fx_logger: true
     use_logger: true
 
 db:
