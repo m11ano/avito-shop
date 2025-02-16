@@ -123,7 +123,7 @@
 				
 				<option value="file33">github.com/m11ano/avito-shop/internal/usecase/account.go (100.0%)</option>
 				
-				<option value="file34">github.com/m11ano/avito-shop/internal/usecase/auth.go (93.3%)</option>
+				<option value="file34">github.com/m11ano/avito-shop/internal/usecase/auth.go (98.1%)</option>
 				
 				<option value="file35">github.com/m11ano/avito-shop/internal/usecase/coin_transfer.go (100.0%)</option>
 				
@@ -2336,14 +2336,8 @@ func (uc *AuthInpl) generateJWTToken(ctx context.Context, account *domain.Accoun
                 "createdAt": strconv.FormatInt(time.Now().Unix(), 10),
         })
 
-        tokenStr, err := token.SignedString([]byte(uc.config.Auth.JWTSecretKey))
-        if err != nil </span><span class="cov0" title="0">{
-                uc.logger.ErrorContext(ctx, "jwt sign error", slog.Any("error", err))
-                return "", e.NewErrorFrom(e.ErrInternal).Wrap(err)
-        }</span>
-
-        <span class="cov8" title="1">return tokenStr, nil</span>
-}
+        return token.SignedString([]byte(uc.config.Auth.JWTSecretKey))
+}</span>
 
 func (uc *AuthInpl) SignInOrSignUp(ctx context.Context, username string, password string) (string, error) <span class="cov8" title="1">{
         var account *domain.Account
@@ -2390,18 +2384,13 @@ func (uc *AuthInpl) SignInOrSignUp(ctx context.Context, username string, passwor
         <span class="cov8" title="1">return uc.generateJWTToken(ctx, account)</span>
 }
 
-func (uc *AuthInpl) AuthByJWTToken(ctx context.Context, tokenStr string) (*uuid.UUID, error) <span class="cov8" title="1">{
+func (uc *AuthInpl) AuthByJWTToken(_ context.Context, tokenStr string) (*uuid.UUID, error) <span class="cov8" title="1">{
         claims := jwt.MapClaims{}
         token, err := jwt.ParseWithClaims(tokenStr, claims, func(_ *jwt.Token) (interface{}, error) </span><span class="cov8" title="1">{
                 return []byte(uc.config.Auth.JWTSecretKey), nil
         }</span>)
-        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
-                uc.logger.ErrorContext(ctx, "parse jwt", slog.Any("error", err))
-                return nil, e.NewErrorFrom(e.ErrUnauthorized).Wrap(err)
-        }</span>
-
-        <span class="cov8" title="1">if !token.Valid </span><span class="cov0" title="0">{
-                return nil, e.ErrUnauthorized
+        <span class="cov8" title="1">if err != nil || !token.Valid </span><span class="cov8" title="1">{
+                return nil, e.NewErrorFrom(e.ErrUnauthorized)
         }</span>
 
         <span class="cov8" title="1">var accountIDStr string

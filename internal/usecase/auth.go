@@ -46,13 +46,7 @@ func (uc *AuthInpl) generateJWTToken(ctx context.Context, account *domain.Accoun
 		"createdAt": strconv.FormatInt(time.Now().Unix(), 10),
 	})
 
-	tokenStr, err := token.SignedString([]byte(uc.config.Auth.JWTSecretKey))
-	if err != nil {
-		uc.logger.ErrorContext(ctx, "jwt sign error", slog.Any("error", err))
-		return "", e.NewErrorFrom(e.ErrInternal).Wrap(err)
-	}
-
-	return tokenStr, nil
+	return token.SignedString([]byte(uc.config.Auth.JWTSecretKey))
 }
 
 func (uc *AuthInpl) SignInOrSignUp(ctx context.Context, username string, password string) (string, error) {
@@ -100,18 +94,13 @@ func (uc *AuthInpl) SignInOrSignUp(ctx context.Context, username string, passwor
 	return uc.generateJWTToken(ctx, account)
 }
 
-func (uc *AuthInpl) AuthByJWTToken(ctx context.Context, tokenStr string) (*uuid.UUID, error) {
+func (uc *AuthInpl) AuthByJWTToken(_ context.Context, tokenStr string) (*uuid.UUID, error) {
 	claims := jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(_ *jwt.Token) (interface{}, error) {
 		return []byte(uc.config.Auth.JWTSecretKey), nil
 	})
-	if err != nil {
-		uc.logger.ErrorContext(ctx, "parse jwt", slog.Any("error", err))
-		return nil, e.NewErrorFrom(e.ErrUnauthorized).Wrap(err)
-	}
-
-	if !token.Valid {
-		return nil, e.ErrUnauthorized
+	if err != nil || !token.Valid {
+		return nil, e.NewErrorFrom(e.ErrUnauthorized)
 	}
 
 	var accountIDStr string
