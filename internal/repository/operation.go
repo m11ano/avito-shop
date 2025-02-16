@@ -13,9 +13,9 @@ import (
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/domain"
 	"github.com/m11ano/avito-shop/pkg/dbhelper"
+	"github.com/m11ano/avito-shop/pkg/e"
 )
 
 const (
@@ -81,7 +81,7 @@ func (r *Operation) dbToDomain(db *DBOperation) *domain.Operation {
 func (r *Operation) domainToDB(item *domain.Operation) (map[string]interface{}, error) {
 	dataMap, err := dbhelper.StructToDBMap(item, operationDBSchema)
 	if err != nil {
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
 	}
 
 	if item.Type == domain.OperationTypeDecrease {
@@ -99,12 +99,12 @@ func (r *Operation) GetBalanceByAccountID(ctx context.Context, accountID uuid.UU
 	query, args, err := r.qb.Select("balance").From(operationBalanceTable).Where(squirrel.Eq{"account_id": accountID}).Limit(1).ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
-		return 0, false, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return 0, false, e.NewErrorFrom(e.ErrInternal).Wrap(err)
 	}
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
@@ -116,11 +116,11 @@ func (r *Operation) GetBalanceByAccountID(ctx context.Context, accountID uuid.UU
 	dbData := &OperationGetBalanceDTO{}
 
 	if err := pgxscan.ScanOne(dbData, rows); err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
 		}
-		if errors.Is(convErr, app.ErrStoreNoRows) {
+		if errors.Is(convErr, e.ErrStoreNoRows) {
 			return 0, false, nil
 		}
 		return 0, false, convErr
@@ -136,13 +136,13 @@ func (r *Operation) updateBalanceByAccountID(ctx context.Context, accountID uuid
 	query, args, err := updateQuery.ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
-		return app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return e.NewErrorFrom(e.ErrInternal).Wrap(err)
 	}
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
 		fmt.Println("CATCH")
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
@@ -168,12 +168,12 @@ func (r *Operation) Create(ctx context.Context, item *domain.Operation) (int64, 
 		query, args, err := r.qb.Insert(operationTable).SetMap(dataMap).ToSql()
 		if err != nil {
 			r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
-			return app.NewErrorFrom(app.ErrInternal).Wrap(err)
+			return e.NewErrorFrom(e.ErrInternal).Wrap(err)
 		}
 
 		_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
 		if err != nil {
-			errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+			errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 			if !errIsConv {
 				r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 			}

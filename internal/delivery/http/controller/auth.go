@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/delivery/http/validation"
+	"github.com/m11ano/avito-shop/pkg/e"
 )
 
 type AuthHandlerOut struct {
@@ -38,10 +38,10 @@ func (ctrl *Controller) AuthHandler(c *fiber.Ctx) error {
 
 	jwtToken, err := ctrl.usecaseAuth.SignInOrSignUp(c.Context(), in.Username, in.Password)
 	if err != nil {
-		if errors.Is(err, app.ErrInternal) {
+		if errors.Is(err, e.ErrInternal) {
 			return err
 		}
-		return app.ErrUnauthorized
+		return e.ErrUnauthorized
 	}
 
 	out := AuthHandlerOut{Token: jwtToken}

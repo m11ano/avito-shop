@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/config"
 	"github.com/m11ano/avito-shop/internal/db/txmngr"
 	"github.com/m11ano/avito-shop/internal/domain"
 	"github.com/m11ano/avito-shop/internal/usecase"
+	"github.com/m11ano/avito-shop/pkg/e"
 	"github.com/m11ano/avito-shop/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -69,10 +69,10 @@ func (s *ShopItemTestSuite) TestGetItemByID__OK() {
 
 func (s *ShopItemTestSuite) TestGetItemByID__NotFound() {
 	shopItemID := uuid.New()
-	s.mockRepo.On("FindItemByID", mock.Anything, shopItemID).Return(nil, app.ErrNotFound)
+	s.mockRepo.On("FindItemByID", mock.Anything, shopItemID).Return(nil, e.ErrNotFound)
 
 	shopItem, err := s.shopItemUsecase.GetItemByID(context.Background(), shopItemID)
-	assert.ErrorIs(s.T(), err, app.ErrNotFound)
+	assert.ErrorIs(s.T(), err, e.ErrNotFound)
 	assert.Nil(s.T(), shopItem)
 
 	s.mockRepo.AssertExpectations(s.T())
@@ -91,10 +91,10 @@ func (s *ShopItemTestSuite) TestGetItemByName__OK() {
 }
 
 func (s *ShopItemTestSuite) TestGetItemByName__NotFound() {
-	s.mockRepo.On("FindItemByName", mock.Anything, "test").Return(nil, app.ErrNotFound)
+	s.mockRepo.On("FindItemByName", mock.Anything, "test").Return(nil, e.ErrNotFound)
 
 	shopItem, err := s.shopItemUsecase.GetItemByName(context.Background(), "test")
-	assert.ErrorIs(s.T(), err, app.ErrNotFound)
+	assert.ErrorIs(s.T(), err, e.ErrNotFound)
 	assert.Nil(s.T(), shopItem)
 
 	s.mockRepo.AssertExpectations(s.T())

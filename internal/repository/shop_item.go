@@ -9,9 +9,9 @@ import (
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/domain"
 	"github.com/m11ano/avito-shop/pkg/dbhelper"
+	"github.com/m11ano/avito-shop/pkg/e"
 )
 
 const (
@@ -61,12 +61,12 @@ func (r *ShopItem) FindItemByID(ctx context.Context, id uuid.UUID) (*domain.Shop
 	query, args, err := r.qb.Select(shopItemTableFields...).From(shopItemTable).Where(squirrel.Eq{"item_id": id}).Limit(1).ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
 	}
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
@@ -78,7 +78,7 @@ func (r *ShopItem) FindItemByID(ctx context.Context, id uuid.UUID) (*domain.Shop
 	dbData := &DBShopItem{}
 
 	if err := pgxscan.ScanOne(dbData, rows); err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
 		}
@@ -94,12 +94,12 @@ func (r *ShopItem) FindItemByName(ctx context.Context, name string) (*domain.Sho
 	query, args, err := r.qb.Select(shopItemTableFields...).From(shopItemTable).Where(squirrel.Eq{"item_name": name}).Limit(1).ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
 	}
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
@@ -111,7 +111,7 @@ func (r *ShopItem) FindItemByName(ctx context.Context, name string) (*domain.Sho
 	dbData := &DBShopItem{}
 
 	if err := pgxscan.ScanOne(dbData, rows); err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
 		}
@@ -127,12 +127,12 @@ func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uui
 	query, args, err := r.qb.Select(shopItemTableFields...).From(shopItemTable).Where(squirrel.Eq{"item_id": ids}).ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
 	}
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
@@ -146,7 +146,7 @@ func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uui
 	for rows.Next() {
 		data := &DBShopItem{}
 		if err := pgxscan.ScanRow(data, rows); err != nil {
-			errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+			errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 			if !errIsConv {
 				r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
 			}
@@ -156,7 +156,7 @@ func (r *ShopItem) FindItemsByIDs(ctx context.Context, ids []uuid.UUID) (map[uui
 		result[domainItem.ID] = domainItem
 	}
 	if err := rows.Err(); err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
 		}

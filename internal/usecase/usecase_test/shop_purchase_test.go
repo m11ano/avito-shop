@@ -8,11 +8,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/config"
 	"github.com/m11ano/avito-shop/internal/db/txmngr"
 	"github.com/m11ano/avito-shop/internal/domain"
 	"github.com/m11ano/avito-shop/internal/usecase"
+	"github.com/m11ano/avito-shop/pkg/e"
 	"github.com/m11ano/avito-shop/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -103,10 +103,10 @@ func (s *ShopPurchaseTestSuite) TestGetInventory__Err_Repo() {
 	testAccount, err := domain.NewAccount("test", "test")
 	assert.NoError(s.T(), err)
 
-	s.mockRepo.On("AggrInventoryByAccountID", mock.Anything, testAccount.ID).Return(nil, app.ErrInternal)
+	s.mockRepo.On("AggrInventoryByAccountID", mock.Anything, testAccount.ID).Return(nil, e.ErrInternal)
 
 	history, err := s.shopPurchaseUsecase.GetInventory(context.Background(), testAccount.ID)
-	assert.ErrorIs(s.T(), err, app.ErrInternal)
+	assert.ErrorIs(s.T(), err, e.ErrInternal)
 	assert.Nil(s.T(), history)
 
 	s.mockRepo.AssertExpectations(s.T())
@@ -125,10 +125,10 @@ func (s *ShopPurchaseTestSuite) TestGetInventory__Err_ShopItemUsecase() {
 		},
 	}
 	s.mockRepo.On("AggrInventoryByAccountID", mock.Anything, testAccount.ID).Return(checkInventoryRepo, nil)
-	s.mockShopItemUsecase.On("GetItemsByIDs", mock.Anything, []uuid.UUID{testShopItem.ID}).Return(nil, app.ErrInternal)
+	s.mockShopItemUsecase.On("GetItemsByIDs", mock.Anything, []uuid.UUID{testShopItem.ID}).Return(nil, e.ErrInternal)
 
 	history, err := s.shopPurchaseUsecase.GetInventory(context.Background(), testAccount.ID)
-	assert.ErrorIs(s.T(), err, app.ErrInternal)
+	assert.ErrorIs(s.T(), err, e.ErrInternal)
 	assert.Nil(s.T(), history)
 
 	s.mockRepo.AssertExpectations(s.T())
@@ -175,7 +175,7 @@ func (s *ShopPurchaseTestSuite) TestMakePurchase__Err_Identity() {
 	s.mockRepo.On("FindIdentity", mock.Anything, identityKey).Return(true, nil)
 
 	purchase, err := s.shopPurchaseUsecase.MakePurchase(context.Background(), testShopItem.Name, testAccount.ID, quantity, &identityKey)
-	assert.ErrorIs(s.T(), err, app.ErrConflict)
+	assert.ErrorIs(s.T(), err, e.ErrConflict)
 	assert.Nil(s.T(), purchase)
 
 	s.mockRepo.AssertExpectations(s.T())
@@ -191,10 +191,10 @@ func (s *ShopPurchaseTestSuite) TestMakePurchase__Err_IdentityInternal() {
 
 	quantity := int64(1)
 
-	s.mockRepo.On("FindIdentity", mock.Anything, identityKey).Return(false, app.ErrInternal)
+	s.mockRepo.On("FindIdentity", mock.Anything, identityKey).Return(false, e.ErrInternal)
 
 	purchase, err := s.shopPurchaseUsecase.MakePurchase(context.Background(), testShopItem.Name, testAccount.ID, quantity, &identityKey)
-	assert.ErrorIs(s.T(), err, app.ErrInternal)
+	assert.ErrorIs(s.T(), err, e.ErrInternal)
 	assert.Nil(s.T(), purchase)
 
 	s.mockRepo.AssertExpectations(s.T())
@@ -211,10 +211,10 @@ func (s *ShopPurchaseTestSuite) TestMakePurchase__Err_ShopItemNotFound() {
 	quantity := int64(1)
 
 	s.mockRepo.On("FindIdentity", mock.Anything, identityKey).Return(false, nil)
-	s.mockShopItemUsecase.On("GetItemByName", mock.Anything, testShopItem.Name).Return(nil, app.ErrNotFound)
+	s.mockShopItemUsecase.On("GetItemByName", mock.Anything, testShopItem.Name).Return(nil, e.ErrNotFound)
 
 	purchase, err := s.shopPurchaseUsecase.MakePurchase(context.Background(), testShopItem.Name, testAccount.ID, quantity, &identityKey)
-	assert.ErrorIs(s.T(), err, app.ErrNotFound)
+	assert.ErrorIs(s.T(), err, e.ErrNotFound)
 	assert.Nil(s.T(), purchase)
 
 	s.mockRepo.AssertExpectations(s.T())

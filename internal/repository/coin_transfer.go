@@ -10,10 +10,10 @@ import (
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/domain"
 	"github.com/m11ano/avito-shop/internal/usecase"
 	"github.com/m11ano/avito-shop/pkg/dbhelper"
+	"github.com/m11ano/avito-shop/pkg/e"
 )
 
 const (
@@ -77,12 +77,12 @@ func (r *CoinTransfer) FindIdentity(ctx context.Context, key uuid.UUID) (bool, e
 	query, args, err := r.qb.Select("COUNT(*) as count").From(coinTransferTable).Where(squirrel.Eq{"identity_key": key}).Limit(1).ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
-		return false, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return false, e.NewErrorFrom(e.ErrInternal).Wrap(err)
 	}
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
@@ -94,7 +94,7 @@ func (r *CoinTransfer) FindIdentity(ctx context.Context, key uuid.UUID) (bool, e
 	dbData := &CoinTransferCheckIdentityDTO{}
 
 	if err := pgxscan.ScanOne(dbData, rows); err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
 		}
@@ -108,18 +108,18 @@ func (r *CoinTransfer) Create(ctx context.Context, item *domain.CoinTransfer) er
 	dataMap, err := dbhelper.StructToDBMap(item, coinTransferDBSchema)
 	if err != nil {
 		r.logger.ErrorContext(ctx, "convert struct to db map", slog.Any("error", err))
-		return app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return e.NewErrorFrom(e.ErrInternal).Wrap(err)
 	}
 
 	query, args, err := r.qb.Insert(coinTransferTable).SetMap(dataMap).ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
-		return app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return e.NewErrorFrom(e.ErrInternal).Wrap(err)
 	}
 
 	_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
 	if err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
@@ -138,12 +138,12 @@ func (r *CoinTransfer) GetAggrCoinHistoryByAccountID(ctx context.Context, accoun
 	query, args, err := r.qb.Select("counterparty_account_id", "SUM(amount) as total_amount").From(coinTransferTable).Where(squirrel.Eq{"owner_account_id": accountID, "transfer_type": transferType}).GroupBy("counterparty_account_id").ToSql()
 	if err != nil {
 		r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
 	}
 
 	rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
 	if err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "executing query", slog.Any("error", err))
 		}
@@ -157,7 +157,7 @@ func (r *CoinTransfer) GetAggrCoinHistoryByAccountID(ctx context.Context, accoun
 	for rows.Next() {
 		data := CoinTransferAggrCoinHistoryItem{}
 		if err := pgxscan.ScanRow(&data, rows); err != nil {
-			errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+			errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 			if !errIsConv {
 				r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
 			}
@@ -169,7 +169,7 @@ func (r *CoinTransfer) GetAggrCoinHistoryByAccountID(ctx context.Context, accoun
 		})
 	}
 	if err := rows.Err(); err != nil {
-		errIsConv, convErr := app.ErrConvertPgxToLogic(err)
+		errIsConv, convErr := e.ErrConvertPgxToLogic(err)
 		if !errIsConv {
 			r.logger.ErrorContext(ctx, "scan row", slog.Any("error", err))
 		}

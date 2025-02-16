@@ -6,12 +6,12 @@ import (
 
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/google/uuid"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/config"
 	"github.com/m11ano/avito-shop/internal/domain"
+	"github.com/m11ano/avito-shop/pkg/e"
 )
 
-var ErrOperationNotEnoughFunds = app.NewErrorFrom(app.ErrUnprocessableEntity).SetMessage("not enough funds")
+var ErrOperationNotEnoughFunds = e.NewErrorFrom(e.ErrUnprocessableEntity).SetMessage("not enough funds")
 
 //go:generate mockery --name=Operation --output=../../tests/mocks --case=underscore
 type Operation interface {

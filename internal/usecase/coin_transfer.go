@@ -6,12 +6,12 @@ import (
 
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/google/uuid"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/config"
 	"github.com/m11ano/avito-shop/internal/domain"
+	"github.com/m11ano/avito-shop/pkg/e"
 )
 
-var ErrCoinTransferAmountMustBeGreaterThanZero = app.NewErrorFrom(app.ErrBadRequest).SetMessage("amount must be greater than zero")
+var ErrCoinTransferAmountMustBeGreaterThanZero = e.NewErrorFrom(e.ErrBadRequest).SetMessage("amount must be greater than zero")
 
 type CoinTransferGetAggrHistoryItem struct {
 	Account *domain.Account
@@ -75,7 +75,7 @@ func (uc *CoinTransferInpl) MakeTransferByUsername(ctx context.Context, targetAc
 			}
 
 			if isIdentityExists {
-				return app.ErrConflict
+				return e.ErrConflict
 			}
 		}
 
@@ -85,7 +85,7 @@ func (uc *CoinTransferInpl) MakeTransferByUsername(ctx context.Context, targetAc
 		}
 
 		if targetAccount.ID == ownerAccountID {
-			return app.NewErrorFrom(app.ErrConflict).SetMessage("cant send coin to yourself")
+			return e.NewErrorFrom(e.ErrConflict).SetMessage("cant send coin to yourself")
 		}
 
 		transferForOwner = domain.NewCoinTransfer(domain.CoinTransferTypeSending, targetAccount.ID, ownerAccountID, amount, identityKey)
@@ -117,8 +117,8 @@ func (uc *CoinTransferInpl) MakeTransferByUsername(ctx context.Context, targetAc
 		return nil
 	})
 	if err != nil {
-		if !app.IsAppError(err) {
-			return nil, nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		if !e.IsAppError(err) {
+			return nil, nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
 		}
 		return nil, nil, err
 	}

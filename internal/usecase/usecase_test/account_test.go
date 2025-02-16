@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/config"
 	"github.com/m11ano/avito-shop/internal/db/txmngr"
 	"github.com/m11ano/avito-shop/internal/domain"
 	"github.com/m11ano/avito-shop/internal/usecase"
+	"github.com/m11ano/avito-shop/pkg/e"
 	"github.com/m11ano/avito-shop/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -69,10 +69,10 @@ func (s *AccountTestSuite) TestGetItemByUsername__OK() {
 }
 
 func (s *AccountTestSuite) TestGetItemByUsername__NotFound() {
-	s.mockRepo.On("FindItemByUsername", mock.Anything, "test").Return(nil, app.ErrNotFound)
+	s.mockRepo.On("FindItemByUsername", mock.Anything, "test").Return(nil, e.ErrNotFound)
 
 	account, err := s.accountUsecase.GetItemByUsername(context.Background(), "test")
-	assert.ErrorIs(s.T(), err, app.ErrNotFound)
+	assert.ErrorIs(s.T(), err, e.ErrNotFound)
 	assert.Nil(s.T(), account)
 
 	s.mockRepo.AssertExpectations(s.T())

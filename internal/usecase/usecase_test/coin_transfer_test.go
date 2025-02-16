@@ -8,11 +8,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/config"
 	"github.com/m11ano/avito-shop/internal/db/txmngr"
 	"github.com/m11ano/avito-shop/internal/domain"
 	"github.com/m11ano/avito-shop/internal/usecase"
+	"github.com/m11ano/avito-shop/pkg/e"
 	"github.com/m11ano/avito-shop/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -94,10 +94,10 @@ func (s *CoinTransferTestSuite) TestGetAggrCoinHistory__Err_Repo() {
 	testAccount, err := domain.NewAccount("test", "test")
 	assert.NoError(s.T(), err)
 
-	s.mockRepo.On("GetAggrCoinHistoryByAccountID", mock.Anything, testAccount.ID, mock.AnythingOfType("domain.CoinTransferType")).Return(nil, app.ErrInternal)
+	s.mockRepo.On("GetAggrCoinHistoryByAccountID", mock.Anything, testAccount.ID, mock.AnythingOfType("domain.CoinTransferType")).Return(nil, e.ErrInternal)
 
 	history, err := s.coinTransferUsecase.GetAggrCoinHistory(context.Background(), testAccount.ID, domain.CoinTransferTypeReciving)
-	assert.ErrorIs(s.T(), err, app.ErrInternal)
+	assert.ErrorIs(s.T(), err, e.ErrInternal)
 	assert.Nil(s.T(), history)
 
 	s.mockRepo.AssertExpectations(s.T())
@@ -114,10 +114,10 @@ func (s *CoinTransferTestSuite) TestGetAggrCoinHistory__Err_AccountUsecase() {
 		},
 	}
 	s.mockRepo.On("GetAggrCoinHistoryByAccountID", mock.Anything, testAccount.ID, mock.AnythingOfType("domain.CoinTransferType")).Return(checkHistoryRepo, nil)
-	s.mockAccountUsecase.On("GetItemsByIDs", mock.Anything, []uuid.UUID{testAccount.ID}).Return(nil, app.ErrInternal)
+	s.mockAccountUsecase.On("GetItemsByIDs", mock.Anything, []uuid.UUID{testAccount.ID}).Return(nil, e.ErrInternal)
 
 	history, err := s.coinTransferUsecase.GetAggrCoinHistory(context.Background(), testAccount.ID, domain.CoinTransferTypeReciving)
-	assert.ErrorIs(s.T(), err, app.ErrInternal)
+	assert.ErrorIs(s.T(), err, e.ErrInternal)
 	assert.Nil(s.T(), history)
 
 	s.mockRepo.AssertExpectations(s.T())
@@ -189,7 +189,7 @@ func (s *CoinTransferTestSuite) TestMakeTransferByUsername__Err_Identity() {
 
 	s.mockRepo.On("FindIdentity", mock.Anything, identityKey).Return(true, nil)
 	ownerCoinTransfer, targetCoinTransfer, err := s.coinTransferUsecase.MakeTransferByUsername(context.Background(), targetAccount.Username, ownerAccount.ID, amount, &identityKey)
-	assert.ErrorIs(s.T(), err, app.ErrConflict)
+	assert.ErrorIs(s.T(), err, e.ErrConflict)
 	assert.Nil(s.T(), ownerCoinTransfer)
 	assert.Nil(s.T(), targetCoinTransfer)
 
@@ -207,9 +207,9 @@ func (s *CoinTransferTestSuite) TestMakeTransferByUsername__Err_IdentityInternal
 
 	amount := int64(100500)
 
-	s.mockRepo.On("FindIdentity", mock.Anything, identityKey).Return(false, app.ErrInternal)
+	s.mockRepo.On("FindIdentity", mock.Anything, identityKey).Return(false, e.ErrInternal)
 	ownerCoinTransfer, targetCoinTransfer, err := s.coinTransferUsecase.MakeTransferByUsername(context.Background(), targetAccount.Username, ownerAccount.ID, amount, &identityKey)
-	assert.ErrorIs(s.T(), err, app.ErrInternal)
+	assert.ErrorIs(s.T(), err, e.ErrInternal)
 	assert.Nil(s.T(), ownerCoinTransfer)
 	assert.Nil(s.T(), targetCoinTransfer)
 
@@ -228,10 +228,10 @@ func (s *CoinTransferTestSuite) TestMakeTransferByUsername__Err_TargetNotFound()
 	amount := int64(100500)
 
 	s.mockRepo.On("FindIdentity", mock.Anything, identityKey).Return(false, nil)
-	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, targetAccount.Username).Return(nil, app.ErrNotFound)
+	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, targetAccount.Username).Return(nil, e.ErrNotFound)
 
 	ownerCoinTransfer, targetCoinTransfer, err := s.coinTransferUsecase.MakeTransferByUsername(context.Background(), targetAccount.Username, ownerAccount.ID, amount, &identityKey)
-	assert.ErrorIs(s.T(), err, app.ErrNotFound)
+	assert.ErrorIs(s.T(), err, e.ErrNotFound)
 	assert.Nil(s.T(), ownerCoinTransfer)
 	assert.Nil(s.T(), targetCoinTransfer)
 
@@ -253,7 +253,7 @@ func (s *CoinTransferTestSuite) TestMakeTransferByUsername__Err_SameOwnerAndTarg
 	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, targetAccount.Username).Return(targetAccount, nil)
 
 	ownerCoinTransfer, targetCoinTransfer, err := s.coinTransferUsecase.MakeTransferByUsername(context.Background(), targetAccount.Username, ownerAccount.ID, amount, &identityKey)
-	assert.ErrorIs(s.T(), err, app.ErrConflict)
+	assert.ErrorIs(s.T(), err, e.ErrConflict)
 	assert.Nil(s.T(), ownerCoinTransfer)
 	assert.Nil(s.T(), targetCoinTransfer)
 
@@ -300,10 +300,10 @@ func (s *CoinTransferTestSuite) TestMakeTransferByUsername__Err_TargetSaveErr() 
 	s.mockRepo.On("FindIdentity", mock.Anything, identityKey).Return(false, nil)
 	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, targetAccount.Username).Return(targetAccount, nil)
 	s.mockOperationUsecase.On("SaveOperation", mock.Anything, mock.AnythingOfType("*domain.Operation")).Return(int64(0), nil).Once()
-	s.mockOperationUsecase.On("SaveOperation", mock.Anything, mock.AnythingOfType("*domain.Operation")).Return(int64(0), app.ErrInternal).Once()
+	s.mockOperationUsecase.On("SaveOperation", mock.Anything, mock.AnythingOfType("*domain.Operation")).Return(int64(0), e.ErrInternal).Once()
 
 	ownerCoinTransfer, targetCoinTransfer, err := s.coinTransferUsecase.MakeTransferByUsername(context.Background(), targetAccount.Username, ownerAccount.ID, amount, &identityKey)
-	assert.ErrorIs(s.T(), err, app.ErrInternal)
+	assert.ErrorIs(s.T(), err, e.ErrInternal)
 	assert.Nil(s.T(), ownerCoinTransfer)
 	assert.Nil(s.T(), targetCoinTransfer)
 

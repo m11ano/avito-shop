@@ -1,4 +1,4 @@
-package app
+package e
 
 var (
 	ErrBadRequest          = &LogicError{onlyRead: true, code: 400, message: "bad request"}

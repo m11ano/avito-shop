@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/config"
 	"github.com/m11ano/avito-shop/internal/db/txmngr"
 	"github.com/m11ano/avito-shop/internal/domain"
 	"github.com/m11ano/avito-shop/internal/usecase"
+	"github.com/m11ano/avito-shop/pkg/e"
 	"github.com/m11ano/avito-shop/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -86,7 +86,7 @@ func (s *AuthTestSuite) TestSignIn__InvalidPassword() {
 	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, testAccount.Username).Return(testAccount, nil)
 
 	jwtToken, err := s.authUsecase.SignInOrSignUp(context.Background(), "test", "test_invalid")
-	assert.ErrorIs(s.T(), err, app.ErrUnauthorized)
+	assert.ErrorIs(s.T(), err, e.ErrUnauthorized)
 	assert.Empty(s.T(), jwtToken)
 
 	s.mockAccountUsecase.AssertExpectations(s.T())
@@ -96,10 +96,10 @@ func (s *AuthTestSuite) TestSignIn__ErrInternal() {
 	testAccount, err := domain.NewAccount("test", "test")
 	assert.NoError(s.T(), err)
 
-	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, testAccount.Username).Return(nil, app.ErrInternal)
+	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, testAccount.Username).Return(nil, e.ErrInternal)
 
 	jwtToken, err := s.authUsecase.SignInOrSignUp(context.Background(), "test", "test")
-	assert.ErrorIs(s.T(), err, app.ErrInternal)
+	assert.ErrorIs(s.T(), err, e.ErrInternal)
 	assert.Empty(s.T(), jwtToken)
 
 	s.mockAccountUsecase.AssertExpectations(s.T())
@@ -122,7 +122,7 @@ func (s *AuthTestSuite) TestSignUp__OK() {
 	testAccount, err := domain.NewAccount("test", "test")
 	assert.NoError(s.T(), err)
 
-	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, testAccount.Username).Return(nil, app.ErrNotFound)
+	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, testAccount.Username).Return(nil, e.ErrNotFound)
 	s.mockAccountUsecase.On("Create", mock.Anything, mock.AnythingOfType("*domain.Account")).Return(nil)
 	s.mockOperationUsecase.On("SaveOperation", mock.Anything, mock.AnythingOfType("*domain.Operation")).Return(s.config.Auth.NewAccountAmount, nil)
 
@@ -140,11 +140,11 @@ func (s *AuthTestSuite) TestSignUp__ErrInternal() {
 	testAccount, err := domain.NewAccount("test", "test")
 	assert.NoError(s.T(), err)
 
-	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, testAccount.Username).Return(nil, app.ErrNotFound)
-	s.mockAccountUsecase.On("Create", mock.Anything, mock.AnythingOfType("*domain.Account")).Return(app.ErrInternal)
+	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, testAccount.Username).Return(nil, e.ErrNotFound)
+	s.mockAccountUsecase.On("Create", mock.Anything, mock.AnythingOfType("*domain.Account")).Return(e.ErrInternal)
 
 	jwtToken, err := s.authUsecase.SignInOrSignUp(context.Background(), "test", "test")
-	assert.ErrorIs(s.T(), err, app.ErrInternal)
+	assert.ErrorIs(s.T(), err, e.ErrInternal)
 	assert.Empty(s.T(), jwtToken)
 
 	s.mockAccountUsecase.AssertExpectations(s.T())
@@ -154,12 +154,12 @@ func (s *AuthTestSuite) TestSignUp__ErrTxСoncurrentExec() {
 	testAccount, err := domain.NewAccount("test", "test")
 	assert.NoError(s.T(), err)
 
-	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, testAccount.Username).Return(nil, app.ErrNotFound)
+	s.mockAccountUsecase.On("GetItemByUsername", mock.Anything, testAccount.Username).Return(nil, e.ErrNotFound)
 	s.mockAccountUsecase.On("Create", mock.Anything, mock.AnythingOfType("*domain.Account")).Return(nil)
-	s.mockOperationUsecase.On("SaveOperation", mock.Anything, mock.AnythingOfType("*domain.Operation")).Return(int64(0), app.ErrTxСoncurrentExec)
+	s.mockOperationUsecase.On("SaveOperation", mock.Anything, mock.AnythingOfType("*domain.Operation")).Return(int64(0), e.ErrTxСoncurrentExec)
 
 	jwtToken, err := s.authUsecase.SignInOrSignUp(context.Background(), "test", "test")
-	assert.ErrorIs(s.T(), err, app.ErrTxСoncurrentExec)
+	assert.ErrorIs(s.T(), err, e.ErrTxСoncurrentExec)
 	assert.Empty(s.T(), jwtToken)
 
 	s.mockAccountUsecase.AssertExpectations(s.T())
@@ -185,7 +185,7 @@ func (s *AuthTestSuite) TestAuthByJWTToken__OK() {
 
 func (s *AuthTestSuite) TestAuthByJWTToken__Err_Empty() {
 	accountID, err := s.authUsecase.AuthByJWTToken(context.Background(), "")
-	assert.ErrorIs(s.T(), err, app.ErrUnauthorized)
+	assert.ErrorIs(s.T(), err, e.ErrUnauthorized)
 	assert.Nil(s.T(), accountID)
 }
 
@@ -198,7 +198,7 @@ func (s *AuthTestSuite) TestAuthByJWTToken__Err_EmptyAccountID() {
 	assert.NoError(s.T(), err)
 
 	accountID, err := s.authUsecase.AuthByJWTToken(context.Background(), tokenStr)
-	assert.ErrorIs(s.T(), err, app.ErrUnauthorized)
+	assert.ErrorIs(s.T(), err, e.ErrUnauthorized)
 	assert.Nil(s.T(), accountID)
 }
 
@@ -214,7 +214,7 @@ func (s *AuthTestSuite) TestAuthByJWTToken__Err_EmptyCreatedAt() {
 	assert.NoError(s.T(), err)
 
 	accountID, err := s.authUsecase.AuthByJWTToken(context.Background(), tokenStr)
-	assert.ErrorIs(s.T(), err, app.ErrUnauthorized)
+	assert.ErrorIs(s.T(), err, e.ErrUnauthorized)
 	assert.Nil(s.T(), accountID)
 }
 
@@ -231,7 +231,7 @@ func (s *AuthTestSuite) TestAuthByJWTToken__Err_OldCreatedAt() {
 	assert.NoError(s.T(), err)
 
 	accountID, err := s.authUsecase.AuthByJWTToken(context.Background(), tokenStr)
-	assert.ErrorIs(s.T(), err, app.ErrUnauthorized)
+	assert.ErrorIs(s.T(), err, e.ErrUnauthorized)
 	assert.Nil(s.T(), accountID)
 }
 
@@ -248,7 +248,7 @@ func (s *AuthTestSuite) TestAuthByJWTToken__Err_InvalidCreatedAt() {
 	assert.NoError(s.T(), err)
 
 	accountID, err := s.authUsecase.AuthByJWTToken(context.Background(), tokenStr)
-	assert.ErrorIs(s.T(), err, app.ErrUnauthorized)
+	assert.ErrorIs(s.T(), err, e.ErrUnauthorized)
 	assert.Nil(s.T(), accountID)
 }
 
@@ -262,7 +262,7 @@ func (s *AuthTestSuite) TestAuthByJWTToken__Err_InvalidAccountID() {
 	assert.NoError(s.T(), err)
 
 	accountID, err := s.authUsecase.AuthByJWTToken(context.Background(), tokenStr)
-	assert.ErrorIs(s.T(), err, app.ErrUnauthorized)
+	assert.ErrorIs(s.T(), err, e.ErrUnauthorized)
 	assert.Nil(s.T(), accountID)
 }
 
@@ -279,6 +279,6 @@ func (s *AuthTestSuite) TestAuthByJWTToken__Err_InvalidJWT() {
 	assert.NoError(s.T(), err)
 
 	accountID, err := s.authUsecase.AuthByJWTToken(context.Background(), tokenStr)
-	assert.ErrorIs(s.T(), err, app.ErrUnauthorized)
+	assert.ErrorIs(s.T(), err, e.ErrUnauthorized)
 	assert.Nil(s.T(), accountID)
 }

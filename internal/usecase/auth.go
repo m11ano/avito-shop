@@ -10,9 +10,9 @@ import (
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/config"
 	"github.com/m11ano/avito-shop/internal/domain"
+	"github.com/m11ano/avito-shop/pkg/e"
 )
 
 //go:generate mockery --name=Auth --output=../../tests/mocks --case=underscore
@@ -49,7 +49,7 @@ func (uc *AuthInpl) generateJWTToken(ctx context.Context, account *domain.Accoun
 	tokenStr, err := token.SignedString([]byte(uc.config.Auth.JWTSecretKey))
 	if err != nil {
 		uc.logger.ErrorContext(ctx, "jwt sign error", slog.Any("error", err))
-		return "", app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return "", e.NewErrorFrom(e.ErrInternal).Wrap(err)
 	}
 
 	return tokenStr, nil
@@ -61,7 +61,7 @@ func (uc *AuthInpl) SignInOrSignUp(ctx context.Context, username string, passwor
 
 	err = uc.txManager.Do(ctx, func(ctx context.Context) error {
 		account, err = uc.usecaseAccount.GetItemByUsername(ctx, username)
-		if err != nil && errors.Is(err, app.ErrNotFound) {
+		if err != nil && errors.Is(err, e.ErrNotFound) {
 			account, err = domain.NewAccount(username, password)
 			if err != nil {
 				return err
@@ -86,15 +86,15 @@ func (uc *AuthInpl) SignInOrSignUp(ctx context.Context, username string, passwor
 		return nil
 	})
 	if err != nil {
-		if !app.IsAppError(err) {
-			return "", app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		if !e.IsAppError(err) {
+			return "", e.NewErrorFrom(e.ErrInternal).Wrap(err)
 		}
 		return "", err
 	}
 
 	check := account.VerifyPassword(password)
 	if !check {
-		return "", app.ErrUnauthorized
+		return "", e.ErrUnauthorized
 	}
 
 	return uc.generateJWTToken(ctx, account)
@@ -107,11 +107,11 @@ func (uc *AuthInpl) AuthByJWTToken(ctx context.Context, tokenStr string) (*uuid.
 	})
 	if err != nil {
 		uc.logger.ErrorContext(ctx, "parse jwt", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrUnauthorized).Wrap(err)
+		return nil, e.NewErrorFrom(e.ErrUnauthorized).Wrap(err)
 	}
 
 	if !token.Valid {
-		return nil, app.ErrUnauthorized
+		return nil, e.ErrUnauthorized
 	}
 
 	var accountIDStr string
@@ -120,25 +120,25 @@ func (uc *AuthInpl) AuthByJWTToken(ctx context.Context, tokenStr string) (*uuid.
 	var ok bool
 
 	if accountIDStr, ok = claims["accountID"].(string); !ok {
-		return nil, app.ErrUnauthorized
+		return nil, e.ErrUnauthorized
 	}
 
 	if createdAtStr, ok = claims["createdAt"].(string); !ok {
-		return nil, app.ErrUnauthorized
+		return nil, e.ErrUnauthorized
 	}
 
 	createdAt, err = strconv.ParseInt(createdAtStr, 10, 64)
 	if err != nil {
-		return nil, app.NewErrorFrom(app.ErrUnauthorized).Wrap(err)
+		return nil, e.NewErrorFrom(e.ErrUnauthorized).Wrap(err)
 	}
 
 	accountID, err := uuid.Parse(accountIDStr)
 	if err != nil {
-		return nil, app.NewErrorFrom(app.ErrUnauthorized).Wrap(err)
+		return nil, e.NewErrorFrom(e.ErrUnauthorized).Wrap(err)
 	}
 
 	if time.Now().Unix()-createdAt > uc.config.Auth.JWTTokenTTL {
-		return nil, app.ErrUnauthorized
+		return nil, e.ErrUnauthorized
 	}
 
 	return &accountID, nil

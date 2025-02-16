@@ -5,8 +5,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/domain"
+	"github.com/m11ano/avito-shop/pkg/e"
 )
 
 type InfoHandlerOut struct {
@@ -37,13 +37,13 @@ type InfoHandlerOutCoinHistoryReceived struct {
 
 func (ctrl *Controller) InfoHandler(c *fiber.Ctx) error {
 	if isAuth, ok := c.Locals("isAuth").(bool); !ok || !isAuth {
-		return app.ErrUnauthorized
+		return e.ErrUnauthorized
 	}
 
 	var accountID *uuid.UUID
 	var ok bool
 	if accountID, ok = c.Locals("authAccountID").(*uuid.UUID); !ok {
-		return app.ErrUnauthorized
+		return e.ErrUnauthorized
 	}
 
 	var err error

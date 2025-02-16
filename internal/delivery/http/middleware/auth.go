@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/usecase"
+	"github.com/m11ano/avito-shop/pkg/e"
 )
 
 func Auth(authUsecase usecase.Auth) func(*fiber.Ctx) error {
@@ -17,7 +17,7 @@ func Auth(authUsecase usecase.Auth) func(*fiber.Ctx) error {
 
 		if len(AuthorizationHeader) > 0 {
 			accountID, err := authUsecase.AuthByJWTToken(c.Context(), AuthorizationHeader)
-			if err != nil && !errors.Is(err, app.ErrUnauthorized) {
+			if err != nil && !errors.Is(err, e.ErrUnauthorized) {
 				return err
 			}
 

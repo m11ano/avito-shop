@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/m11ano/avito-shop/internal/app"
+	"github.com/m11ano/avito-shop/pkg/e"
 )
 
 type errorJSON struct {
@@ -15,7 +15,7 @@ func ErrorHandler() func(*fiber.Ctx, error) error {
 		code := 500
 
 		switch errTyped := err.(type) {
-		case *app.LogicError:
+		case *e.LogicError:
 			code = errTyped.Code()
 			json.Errors = errTyped.Error()
 		case *fiber.Error:

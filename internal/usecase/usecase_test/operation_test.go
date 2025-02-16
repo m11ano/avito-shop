@@ -6,11 +6,11 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/config"
 	"github.com/m11ano/avito-shop/internal/db/txmngr"
 	"github.com/m11ano/avito-shop/internal/domain"
 	"github.com/m11ano/avito-shop/internal/usecase"
+	"github.com/m11ano/avito-shop/pkg/e"
 	"github.com/m11ano/avito-shop/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -74,10 +74,10 @@ func (s *OperationTestSuite) TestGetBalanceByAccountID__Err() {
 	assert.NoError(s.T(), err)
 
 	checkBalance := int64(0)
-	s.mockRepo.On("GetBalanceByAccountID", mock.Anything, testAccount.ID).Return(checkBalance, false, app.ErrInternal)
+	s.mockRepo.On("GetBalanceByAccountID", mock.Anything, testAccount.ID).Return(checkBalance, false, e.ErrInternal)
 
 	balance, found, err := s.operationUsecase.GetBalanceByAccountID(context.Background(), testAccount.ID)
-	assert.ErrorIs(s.T(), err, app.ErrInternal)
+	assert.ErrorIs(s.T(), err, e.ErrInternal)
 	assert.Equal(s.T(), checkBalance, balance)
 	assert.Equal(s.T(), false, found)
 
@@ -107,10 +107,10 @@ func (s *OperationTestSuite) TestSaveOperationIncrease__Err__СoncurrentExec() {
 	checkBalance := int64(100500)
 	operation := domain.NewOperation(domain.OperationTypeIncrease, testAccount.ID, checkBalance, domain.OperationSourceTypeDeposit, nil)
 
-	s.mockRepo.On("Create", mock.Anything, operation).Return(checkBalance, app.ErrTxСoncurrentExec)
+	s.mockRepo.On("Create", mock.Anything, operation).Return(checkBalance, e.ErrTxСoncurrentExec)
 
 	balance, err := s.operationUsecase.SaveOperation(context.Background(), operation)
-	assert.ErrorIs(s.T(), err, app.ErrTxСoncurrentExec)
+	assert.ErrorIs(s.T(), err, e.ErrTxСoncurrentExec)
 	assert.Equal(s.T(), int64(0), balance)
 
 	s.mockRepo.AssertExpectations(s.T())
@@ -139,10 +139,10 @@ func (s *OperationTestSuite) TestSaveOperationDecrease__Err__СoncurrentExec() {
 	checkBalance := int64(100500)
 	operation := domain.NewOperation(domain.OperationTypeDecrease, testAccount.ID, checkBalance, domain.OperationSourceTypeDeposit, nil)
 
-	s.mockRepo.On("Create", mock.Anything, operation).Return(checkBalance, app.ErrTxСoncurrentExec)
+	s.mockRepo.On("Create", mock.Anything, operation).Return(checkBalance, e.ErrTxСoncurrentExec)
 
 	balance, err := s.operationUsecase.SaveOperation(context.Background(), operation)
-	assert.ErrorIs(s.T(), err, app.ErrTxСoncurrentExec)
+	assert.ErrorIs(s.T(), err, e.ErrTxСoncurrentExec)
 	assert.Equal(s.T(), int64(0), balance)
 
 	s.mockRepo.AssertExpectations(s.T())

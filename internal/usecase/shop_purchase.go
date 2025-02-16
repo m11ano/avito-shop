@@ -6,9 +6,9 @@ import (
 
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/google/uuid"
-	"github.com/m11ano/avito-shop/internal/app"
 	"github.com/m11ano/avito-shop/internal/config"
 	"github.com/m11ano/avito-shop/internal/domain"
+	"github.com/m11ano/avito-shop/pkg/e"
 )
 
 type ShopPurchaseGetInventoryItem struct {
@@ -69,7 +69,7 @@ func (uc *ShopPurchaseInpl) MakePurchase(ctx context.Context, itemName string, a
 			}
 
 			if isIdentityExists {
-				return app.ErrConflict
+				return e.ErrConflict
 			}
 		}
 
@@ -95,8 +95,8 @@ func (uc *ShopPurchaseInpl) MakePurchase(ctx context.Context, itemName string, a
 		return nil
 	})
 	if err != nil {
-		if !app.IsAppError(err) {
-			return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		if !e.IsAppError(err) {
+			return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
 		}
 		return nil, err
 	}
