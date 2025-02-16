@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/m11ano/avito-shop/internal/config"
+	"github.com/m11ano/avito-shop/internal/infra/config"
 )
 
 func NewLogger(config config.Config) *slog.Logger {

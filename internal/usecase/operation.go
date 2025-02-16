@@ -6,8 +6,8 @@ import (
 
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/google/uuid"
-	"github.com/m11ano/avito-shop/internal/config"
 	"github.com/m11ano/avito-shop/internal/domain"
+	"github.com/m11ano/avito-shop/internal/infra/config"
 	"github.com/m11ano/avito-shop/pkg/e"
 )
 

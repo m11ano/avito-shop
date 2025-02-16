@@ -2,9 +2,9 @@ package http
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/m11ano/avito-shop/internal/config"
 	"github.com/m11ano/avito-shop/internal/delivery/http/controller"
 	"github.com/m11ano/avito-shop/internal/delivery/http/middleware"
+	"github.com/m11ano/avito-shop/internal/infra/config"
 	"github.com/m11ano/avito-shop/internal/usecase"
 )
 

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/m11ano/avito-shop/internal/bootstrap"
-	"github.com/m11ano/avito-shop/internal/config"
+	"github.com/m11ano/avito-shop/internal/infra/config"
 	"go.uber.org/fx"
 )
 

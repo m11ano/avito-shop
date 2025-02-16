@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/m11ano/avito-shop/internal/config"
-	"github.com/m11ano/avito-shop/internal/db/txmngr"
 	"github.com/m11ano/avito-shop/internal/domain"
+	"github.com/m11ano/avito-shop/internal/infra/config"
+	"github.com/m11ano/avito-shop/internal/infra/db/txmngr"
 	"github.com/m11ano/avito-shop/internal/usecase"
 	"github.com/m11ano/avito-shop/pkg/e"
 	"github.com/m11ano/avito-shop/tests/mocks"

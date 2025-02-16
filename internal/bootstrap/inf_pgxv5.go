@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/m11ano/avito-shop/internal/config"
+	"github.com/m11ano/avito-shop/internal/infra/config"
 )
 
 type pgxv5Tracer struct {

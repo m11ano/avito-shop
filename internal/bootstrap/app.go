@@ -11,9 +11,9 @@ import (
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/m11ano/avito-shop/internal/config"
-	"github.com/m11ano/avito-shop/internal/db/migrations"
-	"github.com/m11ano/avito-shop/internal/db/txmngr"
+	"github.com/m11ano/avito-shop/internal/infra/config"
+	"github.com/m11ano/avito-shop/internal/infra/db/migrations"
+	"github.com/m11ano/avito-shop/internal/infra/db/txmngr"
 	"go.uber.org/fx"
 )
 

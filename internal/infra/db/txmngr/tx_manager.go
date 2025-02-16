@@ -5,7 +5,7 @@ import (
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/settings"
 	"github.com/jackc/pgx/v5"
-	"github.com/m11ano/avito-shop/internal/db"
+	"github.com/m11ano/avito-shop/internal/infra/db"
 )
 
 func New(dbpool db.PgxPool) (*manager.Manager, *trmpgx.CtxGetter) {
