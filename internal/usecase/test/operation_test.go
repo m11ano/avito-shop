@@ -22,7 +22,7 @@ import (
 type OperationTestSuite struct {
 	suite.Suite
 	mockPgxPool      *mocks.PgxPool
-	operationService usecase.Operation
+	operationUsecase usecase.Operation
 	app              *fx.App
 	mockRepo         *mocks.OperationRepository
 }
@@ -38,7 +38,7 @@ func (s *OperationTestSuite) SetupTest() {
 		fx.Provide(txmngr.NewProvider(s.mockPgxPool)),
 		fx.Provide(func() usecase.OperationRepository { return s.mockRepo }),
 		fx.Provide(fx.Annotate(usecase.NewOperationInpl, fx.As(new(usecase.Operation)))),
-		fx.Populate(&s.operationService),
+		fx.Populate(&s.operationUsecase),
 	)
 
 	err := s.app.Start(context.Background())
@@ -61,7 +61,7 @@ func (s *OperationTestSuite) TestGetBalanceByAccountID__OK() {
 	checkBalance := int64(100500)
 	s.mockRepo.On("GetBalanceByAccountID", mock.Anything, testAccount.ID).Return(checkBalance, true, nil)
 
-	balance, found, err := s.operationService.GetBalanceByAccountID(context.Background(), testAccount.ID)
+	balance, found, err := s.operationUsecase.GetBalanceByAccountID(context.Background(), testAccount.ID)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), checkBalance, balance)
 	assert.Equal(s.T(), true, found)
@@ -76,7 +76,7 @@ func (s *OperationTestSuite) TestGetBalanceByAccountID__Err() {
 	checkBalance := int64(0)
 	s.mockRepo.On("GetBalanceByAccountID", mock.Anything, testAccount.ID).Return(checkBalance, false, app.ErrInternal)
 
-	balance, found, err := s.operationService.GetBalanceByAccountID(context.Background(), testAccount.ID)
+	balance, found, err := s.operationUsecase.GetBalanceByAccountID(context.Background(), testAccount.ID)
 	assert.ErrorIs(s.T(), err, app.ErrInternal)
 	assert.Equal(s.T(), checkBalance, balance)
 	assert.Equal(s.T(), false, found)
@@ -93,7 +93,7 @@ func (s *OperationTestSuite) TestSaveOperationIncrease__OK() {
 
 	s.mockRepo.On("Create", mock.Anything, operation).Return(checkBalance, nil)
 
-	balance, err := s.operationService.SaveOperation(context.Background(), operation)
+	balance, err := s.operationUsecase.SaveOperation(context.Background(), operation)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), checkBalance, balance)
 
@@ -109,7 +109,7 @@ func (s *OperationTestSuite) TestSaveOperationIncrease__Err__СoncurrentExec() {
 
 	s.mockRepo.On("Create", mock.Anything, operation).Return(checkBalance, app.ErrTxСoncurrentExec)
 
-	balance, err := s.operationService.SaveOperation(context.Background(), operation)
+	balance, err := s.operationUsecase.SaveOperation(context.Background(), operation)
 	assert.ErrorIs(s.T(), err, app.ErrTxСoncurrentExec)
 	assert.Equal(s.T(), int64(0), balance)
 
@@ -125,7 +125,7 @@ func (s *OperationTestSuite) TestSaveOperationDecrease__OK() {
 
 	s.mockRepo.On("Create", mock.Anything, operation).Return(checkBalance, nil)
 
-	balance, err := s.operationService.SaveOperation(context.Background(), operation)
+	balance, err := s.operationUsecase.SaveOperation(context.Background(), operation)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), checkBalance, balance)
 
@@ -141,7 +141,7 @@ func (s *OperationTestSuite) TestSaveOperationDecrease__Err__СoncurrentExec() {
 
 	s.mockRepo.On("Create", mock.Anything, operation).Return(checkBalance, app.ErrTxСoncurrentExec)
 
-	balance, err := s.operationService.SaveOperation(context.Background(), operation)
+	balance, err := s.operationUsecase.SaveOperation(context.Background(), operation)
 	assert.ErrorIs(s.T(), err, app.ErrTxСoncurrentExec)
 	assert.Equal(s.T(), int64(0), balance)
 
@@ -154,11 +154,10 @@ func (s *OperationTestSuite) TestSaveOperationDecrease__Err__OperationNotEnoughF
 
 	checkBalance := int64(100500)
 	operation := domain.NewOperation(domain.OperationTypeDecrease, testAccount.ID, checkBalance, domain.OperationSourceTypeDeposit, nil)
-	assert.NotNil(s.T(), operation)
 
 	s.mockRepo.On("Create", mock.Anything, operation).Return(int64(-100), nil)
 
-	balance, err := s.operationService.SaveOperation(context.Background(), operation)
+	balance, err := s.operationUsecase.SaveOperation(context.Background(), operation)
 	assert.ErrorIs(s.T(), err, usecase.ErrOperationNotEnoughFunds)
 	assert.Equal(s.T(), int64(0), balance)
 

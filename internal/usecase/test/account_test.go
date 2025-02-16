@@ -23,7 +23,7 @@ import (
 type AccountTestSuite struct {
 	suite.Suite
 	mockPgxPool    *mocks.PgxPool
-	accountService usecase.Account
+	accountUsecase usecase.Account
 	app            *fx.App
 	mockRepo       *mocks.AccountRepository
 }
@@ -39,7 +39,7 @@ func (s *AccountTestSuite) SetupTest() {
 		fx.Provide(txmngr.NewProvider(s.mockPgxPool)),
 		fx.Provide(func() usecase.AccountRepository { return s.mockRepo }),
 		fx.Provide(fx.Annotate(usecase.NewAccountInpl, fx.As(new(usecase.Account)))),
-		fx.Populate(&s.accountService),
+		fx.Populate(&s.accountUsecase),
 	)
 
 	err := s.app.Start(context.Background())
@@ -59,9 +59,9 @@ func (s *AccountTestSuite) TestGetItemByUsername__OK() {
 	testAccount, err := domain.NewAccount("test", "test")
 	assert.NoError(s.T(), err)
 
-	s.mockRepo.On("FindItemByUsername", mock.Anything, "test").Return(testAccount, nil)
+	s.mockRepo.On("FindItemByUsername", mock.Anything, testAccount.Username).Return(testAccount, nil)
 
-	account, err := s.accountService.GetItemByUsername(context.Background(), "test")
+	account, err := s.accountUsecase.GetItemByUsername(context.Background(), "test")
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), testAccount, account)
 
@@ -71,7 +71,7 @@ func (s *AccountTestSuite) TestGetItemByUsername__OK() {
 func (s *AccountTestSuite) TestGetItemByUsername__NotFound() {
 	s.mockRepo.On("FindItemByUsername", mock.Anything, "test").Return(nil, app.ErrNotFound)
 
-	account, err := s.accountService.GetItemByUsername(context.Background(), "test")
+	account, err := s.accountUsecase.GetItemByUsername(context.Background(), "test")
 	assert.ErrorIs(s.T(), err, app.ErrNotFound)
 	assert.Nil(s.T(), account)
 
@@ -86,7 +86,7 @@ func (s *AccountTestSuite) TestGetItemByIDs__OK() {
 
 	s.mockRepo.On("FindItemsByIDs", mock.Anything, []uuid.UUID{testAccount1.ID, testAccount2.ID}).Return(map[uuid.UUID]domain.Account{testAccount1.ID: *testAccount1, testAccount2.ID: *testAccount2}, nil)
 
-	accounts, err := s.accountService.GetItemsByIDs(context.Background(), []uuid.UUID{testAccount1.ID, testAccount2.ID})
+	accounts, err := s.accountUsecase.GetItemsByIDs(context.Background(), []uuid.UUID{testAccount1.ID, testAccount2.ID})
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), map[uuid.UUID]domain.Account{testAccount1.ID: *testAccount1, testAccount2.ID: *testAccount2}, accounts)
 
@@ -100,7 +100,7 @@ func (s *AccountTestSuite) TestCreate__OK() {
 	s.mockRepo.On("Create", mock.Anything, testAccount).Return(nil)
 
 	testAccountCopy := *testAccount // not deep copy
-	err = s.accountService.Create(context.Background(), testAccount)
+	err = s.accountUsecase.Create(context.Background(), testAccount)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), &testAccountCopy, testAccount)
 

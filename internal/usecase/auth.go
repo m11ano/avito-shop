@@ -40,9 +40,9 @@ func NewAuthInpl(logger *slog.Logger, config config.Config, txManager *manager.M
 	return uc
 }
 
-func (uc *AuthInpl) generateJWTToken(ctx context.Context, auth *domain.Account) (string, error) {
+func (uc *AuthInpl) generateJWTToken(ctx context.Context, account *domain.Account) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"accountID": auth.ID.String(),
+		"accountID": account.ID.String(),
 		"createdAt": strconv.FormatInt(time.Now().Unix(), 10),
 	})
 
@@ -92,10 +92,6 @@ func (uc *AuthInpl) SignInOrSignUp(ctx context.Context, username string, passwor
 		return "", err
 	}
 
-	if account == nil {
-		return "", app.NewErrorFrom(app.ErrInternal)
-	}
-
 	check := account.VerifyPassword(password)
 	if !check {
 		return "", app.ErrUnauthorized
@@ -111,7 +107,7 @@ func (uc *AuthInpl) AuthByJWTToken(ctx context.Context, tokenStr string) (*uuid.
 	})
 	if err != nil {
 		uc.logger.ErrorContext(ctx, "parse jwt", slog.Any("error", err))
-		return nil, app.NewErrorFrom(app.ErrInternal).Wrap(err)
+		return nil, app.NewErrorFrom(app.ErrUnauthorized).Wrap(err)
 	}
 
 	if !token.Valid {
