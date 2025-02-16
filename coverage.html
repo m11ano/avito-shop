@@ -67,15 +67,15 @@
 				
 				<option value="file5">github.com/m11ano/avito-shop/internal/delivery/http/controller/auth.go (75.0%)</option>
 				
-				<option value="file6">github.com/m11ano/avito-shop/internal/delivery/http/controller/buy.go (0.0%)</option>
+				<option value="file6">github.com/m11ano/avito-shop/internal/delivery/http/controller/buy.go (66.7%)</option>
 				
 				<option value="file7">github.com/m11ano/avito-shop/internal/delivery/http/controller/controller.go (100.0%)</option>
 				
 				<option value="file8">github.com/m11ano/avito-shop/internal/delivery/http/controller/info.go (0.0%)</option>
 				
-				<option value="file9">github.com/m11ano/avito-shop/internal/delivery/http/controller/send_coin.go (0.0%)</option>
+				<option value="file9">github.com/m11ano/avito-shop/internal/delivery/http/controller/send_coin.go (65.4%)</option>
 				
-				<option value="file10">github.com/m11ano/avito-shop/internal/delivery/http/middleware/auth.go (50.0%)</option>
+				<option value="file10">github.com/m11ano/avito-shop/internal/delivery/http/middleware/auth.go (91.7%)</option>
 				
 				<option value="file11">github.com/m11ano/avito-shop/internal/delivery/http/middleware/error_handler.go (70.0%)</option>
 				
@@ -113,13 +113,13 @@
 				
 				<option value="file28">github.com/m11ano/avito-shop/internal/repository/account.go (35.4%)</option>
 				
-				<option value="file29">github.com/m11ano/avito-shop/internal/repository/coin_transfer.go (3.2%)</option>
+				<option value="file29">github.com/m11ano/avito-shop/internal/repository/coin_transfer.go (27.4%)</option>
 				
-				<option value="file30">github.com/m11ano/avito-shop/internal/repository/operation.go (50.0%)</option>
+				<option value="file30">github.com/m11ano/avito-shop/internal/repository/operation.go (51.4%)</option>
 				
-				<option value="file31">github.com/m11ano/avito-shop/internal/repository/shop_item.go (2.9%)</option>
+				<option value="file31">github.com/m11ano/avito-shop/internal/repository/shop_item.go (17.6%)</option>
 				
-				<option value="file32">github.com/m11ano/avito-shop/internal/repository/shop_purchase.go (3.2%)</option>
+				<option value="file32">github.com/m11ano/avito-shop/internal/repository/shop_purchase.go (27.4%)</option>
 				
 				<option value="file33">github.com/m11ano/avito-shop/internal/usecase/account.go (100.0%)</option>
 				
@@ -232,7 +232,7 @@ var App = fx.Options(
         // Инфраструктура
         fx.Provide(NewLogger),
         fx.WithLogger(func(config config.Config) fxevent.Logger <span class="cov8" title="1">{
-                if !config.App.UseLogger </span><span class="cov8" title="1">{
+                if !config.App.UseFxLogger </span><span class="cov8" title="1">{
                         return fxevent.NopLogger
                 }</span>
                 <span class="cov0" title="0">return &amp;fxevent.ConsoleLogger{
@@ -353,6 +353,7 @@ func NewHTTPFiber(httpCfg HTTPConfig, logger *slog.Logger) *fiber.App <span clas
 import (
         "io"
         "log/slog"
+        "os"
 
         "github.com/m11ano/avito-shop/internal/infra/config"
 )
@@ -363,9 +364,9 @@ func NewLogger(config config.Config) *slog.Logger <span class="cov8" title="1">{
         case !config.App.UseLogger:<span class="cov8" title="1">
                 handler = slog.NewTextHandler(io.Discard, nil)</span>
         case config.App.IsProd:<span class="cov0" title="0">
-                handler = slog.NewJSONHandler(io.Discard, nil)</span>
+                handler = slog.NewJSONHandler(os.Stdout, nil)</span>
         default:<span class="cov0" title="0">
-                handler = slog.NewTextHandler(io.Discard, nil)</span>
+                handler = slog.NewTextHandler(os.Stdout, nil)</span>
         }
 
         <span class="cov8" title="1">logger := slog.New(handler)
@@ -502,29 +503,29 @@ import (
         "github.com/m11ano/avito-shop/pkg/e"
 )
 
-func (ctrl *Controller) BuyHandler(c *fiber.Ctx) error <span class="cov0" title="0">{
+func (ctrl *Controller) BuyHandler(c *fiber.Ctx) error <span class="cov8" title="1">{
         if isAuth, ok := c.Locals("isAuth").(bool); !ok || !isAuth </span><span class="cov0" title="0">{
                 return e.ErrUnauthorized
         }</span>
 
-        <span class="cov0" title="0">var accountID *uuid.UUID
+        <span class="cov8" title="1">var accountID *uuid.UUID
         var ok bool
         if accountID, ok = c.Locals("authAccountID").(*uuid.UUID); !ok </span><span class="cov0" title="0">{
                 return e.ErrUnauthorized
         }</span>
 
-        <span class="cov0" title="0">var requestID *uuid.UUID
+        <span class="cov8" title="1">var requestID *uuid.UUID
         if requestID, ok = c.Locals("requestID").(*uuid.UUID); !ok </span><span class="cov0" title="0">{
                 return e.ErrInternal
         }</span>
 
-        <span class="cov0" title="0">shopItemName := c.Params("name")
+        <span class="cov8" title="1">shopItemName := c.Params("name")
 
         _, err := ctrl.usecaseShopPurchase.MakePurchase(c.Context(), shopItemName, *accountID, 1, requestID)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 // Маппинг ошибок под требования контракта
                 switch </span>{
-                case errors.Is(err, usecase.ErrOperationNotEnoughFunds):<span class="cov0" title="0">
+                case errors.Is(err, usecase.ErrOperationNotEnoughFunds):<span class="cov8" title="1">
                         return e.NewErrorFrom(e.ErrBadRequest).SetMessage(err.Error())</span>
                 case errors.Is(err, e.ErrConflict):<span class="cov0" title="0">
                         return e.NewErrorFrom(e.ErrBadRequest).SetMessage(err.Error())</span>
@@ -535,18 +536,21 @@ func (ctrl *Controller) BuyHandler(c *fiber.Ctx) error <span class="cov0" title=
                 }
         }
 
-        <span class="cov0" title="0">return c.SendStatus(fiber.StatusOK)</span>
+        <span class="cov8" title="1">return c.SendStatus(fiber.StatusOK)</span>
 }
 </pre>
 		
 		<pre class="file" id="file7" style="display: none">package controller
 
 import (
+        "log/slog"
+
         "github.com/go-playground/validator/v10"
         "github.com/m11ano/avito-shop/internal/usecase"
 )
 
 type Controller struct {
+        logger              *slog.Logger
         vldtr               *validator.Validate
         usecaseAuth         usecase.Auth
         usecaseOperation    usecase.Operation
@@ -554,8 +558,9 @@ type Controller struct {
         usecaseCoinTransfer usecase.CoinTransfer
 }
 
-func New(vldtr *validator.Validate, usecaseAuth usecase.Auth, usecaseOperation usecase.Operation, usecaseShopPurchase usecase.ShopPurchase, usecaseCoinTransfer usecase.CoinTransfer) *Controller <span class="cov8" title="1">{
+func New(logger *slog.Logger, vldtr *validator.Validate, usecaseAuth usecase.Auth, usecaseOperation usecase.Operation, usecaseShopPurchase usecase.ShopPurchase, usecaseCoinTransfer usecase.CoinTransfer) *Controller <span class="cov8" title="1">{
         return &amp;Controller{
+                logger:              logger,
                 vldtr:               vldtr,
                 usecaseAuth:         usecaseAuth,
                 usecaseOperation:    usecaseOperation,
@@ -689,46 +694,46 @@ type SendCoinIn struct {
         Amount int64  `json:"amount" validate:"gt=0"`
 }
 
-func (ctrl *Controller) SendCoinValidate(in *SendCoinIn) (bool, string) <span class="cov0" title="0">{
+func (ctrl *Controller) SendCoinValidate(in *SendCoinIn) (bool, string) <span class="cov8" title="1">{
         if err := ctrl.vldtr.Struct(in); err != nil </span><span class="cov0" title="0">{
                 return validation.FormatErrors(err)
         }</span>
-        <span class="cov0" title="0">return true, ""</span>
+        <span class="cov8" title="1">return true, ""</span>
 }
 
-func (ctrl *Controller) SendCoinHandler(c *fiber.Ctx) error <span class="cov0" title="0">{
+func (ctrl *Controller) SendCoinHandler(c *fiber.Ctx) error <span class="cov8" title="1">{
         if isAuth, ok := c.Locals("isAuth").(bool); !ok || !isAuth </span><span class="cov0" title="0">{
                 return e.ErrUnauthorized
         }</span>
 
-        <span class="cov0" title="0">in := &amp;SendCoinIn{}
+        <span class="cov8" title="1">in := &amp;SendCoinIn{}
 
         if err := c.BodyParser(in); err != nil </span><span class="cov0" title="0">{
                 return &amp;fiber.Error{Code: fiber.ErrBadRequest.Code, Message: err.Error()}
         }</span>
 
-        <span class="cov0" title="0">var ok bool
+        <span class="cov8" title="1">var ok bool
 
         ok, errMsg := ctrl.SendCoinValidate(in)
         if !ok </span><span class="cov0" title="0">{
                 return &amp;fiber.Error{Code: fiber.ErrBadRequest.Code, Message: errMsg}
         }</span>
 
-        <span class="cov0" title="0">var accountID *uuid.UUID
+        <span class="cov8" title="1">var accountID *uuid.UUID
         if accountID, ok = c.Locals("authAccountID").(*uuid.UUID); !ok </span><span class="cov0" title="0">{
                 return e.ErrUnauthorized
         }</span>
 
-        <span class="cov0" title="0">var requestID *uuid.UUID
+        <span class="cov8" title="1">var requestID *uuid.UUID
         if requestID, ok = c.Locals("requestID").(*uuid.UUID); !ok </span><span class="cov0" title="0">{
                 return e.ErrInternal
         }</span>
 
-        <span class="cov0" title="0">_, _, err := ctrl.usecaseCoinTransfer.MakeTransferByUsername(c.Context(), in.ToUser, *accountID, in.Amount, requestID)
-        if err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">_, _, err := ctrl.usecaseCoinTransfer.MakeTransferByUsername(c.Context(), in.ToUser, *accountID, in.Amount, requestID)
+        if err != nil </span><span class="cov8" title="1">{
                 // Маппинг ошибок под требования контракта
                 switch </span>{
-                case errors.Is(err, usecase.ErrOperationNotEnoughFunds):<span class="cov0" title="0">
+                case errors.Is(err, usecase.ErrOperationNotEnoughFunds):<span class="cov8" title="1">
                         return e.NewErrorFrom(e.ErrBadRequest).SetMessage(err.Error())</span>
                 case errors.Is(err, e.ErrConflict):<span class="cov0" title="0">
                         return e.NewErrorFrom(e.ErrBadRequest).SetMessage(err.Error())</span>
@@ -739,7 +744,7 @@ func (ctrl *Controller) SendCoinHandler(c *fiber.Ctx) error <span class="cov0" t
                 }
         }
 
-        <span class="cov0" title="0">return c.SendStatus(fiber.StatusOK)</span>
+        <span class="cov8" title="1">return c.SendStatus(fiber.StatusOK)</span>
 }
 </pre>
 		
@@ -760,13 +765,13 @@ func Auth(authUsecase usecase.Auth) func(*fiber.Ctx) error <span class="cov8" ti
 
                 AuthorizationHeader := strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
 
-                if len(AuthorizationHeader) &gt; 0 </span><span class="cov0" title="0">{
+                if len(AuthorizationHeader) &gt; 0 </span><span class="cov8" title="1">{
                         accountID, err := authUsecase.AuthByJWTToken(c.Context(), AuthorizationHeader)
                         if err != nil &amp;&amp; !errors.Is(err, e.ErrUnauthorized) </span><span class="cov0" title="0">{
                                 return err
                         }</span>
 
-                        <span class="cov0" title="0">if accountID != nil </span><span class="cov0" title="0">{
+                        <span class="cov8" title="1">if accountID != nil </span><span class="cov8" title="1">{
                                 isAuth = true
                                 c.Locals("authAccountID", accountID)
                         }</span>
@@ -1194,6 +1199,7 @@ type Config struct {
                 StopTimeout  int  `yaml:"stop_timeout" env:"APP_STOP_TIMEOUT" env-default:"10"`
                 IsProd       bool `yaml:"is_prod" env:"APP_IS_PROD" env-default:"false"`
                 UseLogger    bool `yaml:"use_logger" env:"APP_USE_LOGGER" env-default:"true"`
+                UseFxLogger  bool `yaml:"use_fx_logger" env:"APP_USE_FX_LOGGER" env-default:"false"`
         } `yaml:"app"`
         DB struct {
                 URI                 string `yaml:"uri" env:"DB_URI"`
@@ -1566,14 +1572,14 @@ type CoinTransferCheckIdentityDTO struct {
         Count int `db:"count"`
 }
 
-func (r *CoinTransfer) FindIdentity(ctx context.Context, key uuid.UUID) (bool, error) <span class="cov0" title="0">{
+func (r *CoinTransfer) FindIdentity(ctx context.Context, key uuid.UUID) (bool, error) <span class="cov8" title="1">{
         query, args, err := r.qb.Select("COUNT(*) as count").From(coinTransferTable).Where(squirrel.Eq{"identity_key": key}).Limit(1).ToSql()
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
                 return false, e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
+        <span class="cov8" title="1">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
@@ -1582,7 +1588,7 @@ func (r *CoinTransfer) FindIdentity(ctx context.Context, key uuid.UUID) (bool, e
                 <span class="cov0" title="0">return false, convErr</span>
         }
 
-        <span class="cov0" title="0">defer rows.Close()
+        <span class="cov8" title="1">defer rows.Close()
 
         dbData := &amp;CoinTransferCheckIdentityDTO{}
 
@@ -1594,23 +1600,23 @@ func (r *CoinTransfer) FindIdentity(ctx context.Context, key uuid.UUID) (bool, e
                 <span class="cov0" title="0">return false, convErr</span>
         }
 
-        <span class="cov0" title="0">return dbData.Count &gt; 0, nil</span>
+        <span class="cov8" title="1">return dbData.Count &gt; 0, nil</span>
 }
 
-func (r *CoinTransfer) Create(ctx context.Context, item *domain.CoinTransfer) error <span class="cov0" title="0">{
+func (r *CoinTransfer) Create(ctx context.Context, item *domain.CoinTransfer) error <span class="cov8" title="1">{
         dataMap, err := dbhelper.StructToDBMap(item, coinTransferDBSchema)
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "convert struct to db map", slog.Any("error", err))
                 return e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">query, args, err := r.qb.Insert(coinTransferTable).SetMap(dataMap).ToSql()
+        <span class="cov8" title="1">query, args, err := r.qb.Insert(coinTransferTable).SetMap(dataMap).ToSql()
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
                 return e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
+        <span class="cov8" title="1">_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
@@ -1619,7 +1625,7 @@ func (r *CoinTransfer) Create(ctx context.Context, item *domain.CoinTransfer) er
                 <span class="cov0" title="0">return convErr</span>
         }
 
-        <span class="cov0" title="0">return nil</span>
+        <span class="cov8" title="1">return nil</span>
 }
 
 type CoinTransferAggrCoinHistoryItem struct {
@@ -1759,7 +1765,7 @@ func (r *Operation) domainToDB(item *domain.Operation) (map[string]interface{}, 
                 return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov8" title="1">if item.Type == domain.OperationTypeDecrease </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if item.Type == domain.OperationTypeDecrease </span><span class="cov8" title="1">{
                 dataMap["amount"] = -item.Amount
         }</span>
 
@@ -1928,7 +1934,7 @@ func NewShopItem(logger *slog.Logger, db *pgxpool.Pool, txc *trmpgx.CtxGetter) *
         }
 }</span>
 
-func (r *ShopItem) dbToDomain(db *DBShopItem) *domain.ShopItem <span class="cov0" title="0">{
+func (r *ShopItem) dbToDomain(db *DBShopItem) *domain.ShopItem <span class="cov8" title="1">{
         return &amp;domain.ShopItem{
                 ID:    db.ID,
                 Name:  db.Name,
@@ -1969,14 +1975,14 @@ func (r *ShopItem) FindItemByID(ctx context.Context, id uuid.UUID) (*domain.Shop
         return item, nil</span>
 }
 
-func (r *ShopItem) FindItemByName(ctx context.Context, name string) (*domain.ShopItem, error) <span class="cov0" title="0">{
+func (r *ShopItem) FindItemByName(ctx context.Context, name string) (*domain.ShopItem, error) <span class="cov8" title="1">{
         query, args, err := r.qb.Select(shopItemTableFields...).From(shopItemTable).Where(squirrel.Eq{"item_name": name}).Limit(1).ToSql()
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
                 return nil, e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
+        <span class="cov8" title="1">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
@@ -1985,7 +1991,7 @@ func (r *ShopItem) FindItemByName(ctx context.Context, name string) (*domain.Sho
                 <span class="cov0" title="0">return nil, convErr</span>
         }
 
-        <span class="cov0" title="0">defer rows.Close()
+        <span class="cov8" title="1">defer rows.Close()
 
         dbData := &amp;DBShopItem{}
 
@@ -1997,7 +2003,7 @@ func (r *ShopItem) FindItemByName(ctx context.Context, name string) (*domain.Sho
                 <span class="cov0" title="0">return nil, convErr</span>
         }
 
-        <span class="cov0" title="0">item := r.dbToDomain(dbData)
+        <span class="cov8" title="1">item := r.dbToDomain(dbData)
 
         return item, nil</span>
 }
@@ -2119,14 +2125,14 @@ type ShopPurchaseCheckIdentityDTO struct {
         Count int `db:"count"`
 }
 
-func (r *ShopPurchase) FindIdentity(ctx context.Context, key uuid.UUID) (bool, error) <span class="cov0" title="0">{
+func (r *ShopPurchase) FindIdentity(ctx context.Context, key uuid.UUID) (bool, error) <span class="cov8" title="1">{
         query, args, err := r.qb.Select("COUNT(*) as count").From(shopPurchaseTable).Where(squirrel.Eq{"identity_key": key}).Limit(1).ToSql()
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
                 return false, e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
+        <span class="cov8" title="1">rows, err := r.txc.DefaultTrOrDB(ctx, r.db).Query(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
@@ -2135,7 +2141,7 @@ func (r *ShopPurchase) FindIdentity(ctx context.Context, key uuid.UUID) (bool, e
                 <span class="cov0" title="0">return false, convErr</span>
         }
 
-        <span class="cov0" title="0">defer rows.Close()
+        <span class="cov8" title="1">defer rows.Close()
 
         dbData := &amp;ShopPurchaseCheckIdentityDTO{}
 
@@ -2147,23 +2153,23 @@ func (r *ShopPurchase) FindIdentity(ctx context.Context, key uuid.UUID) (bool, e
                 <span class="cov0" title="0">return false, convErr</span>
         }
 
-        <span class="cov0" title="0">return dbData.Count &gt; 0, nil</span>
+        <span class="cov8" title="1">return dbData.Count &gt; 0, nil</span>
 }
 
-func (r *ShopPurchase) Create(ctx context.Context, item *domain.ShopPurchase) error <span class="cov0" title="0">{
+func (r *ShopPurchase) Create(ctx context.Context, item *domain.ShopPurchase) error <span class="cov8" title="1">{
         dataMap, err := dbhelper.StructToDBMap(item, shopPurchaseDBSchema)
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "convert struct to db map", slog.Any("error", err))
                 return e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">query, args, err := r.qb.Insert(shopPurchaseTable).SetMap(dataMap).ToSql()
+        <span class="cov8" title="1">query, args, err := r.qb.Insert(shopPurchaseTable).SetMap(dataMap).ToSql()
         if err != nil </span><span class="cov0" title="0">{
                 r.logger.ErrorContext(ctx, "building query", slog.Any("error", err))
                 return e.NewErrorFrom(e.ErrInternal).Wrap(err)
         }</span>
 
-        <span class="cov0" title="0">_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
+        <span class="cov8" title="1">_, err = r.txc.DefaultTrOrDB(ctx, r.db).Exec(ctx, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 errIsConv, convErr := e.ErrConvertPgxToLogic(err)
                 if !errIsConv </span><span class="cov0" title="0">{
@@ -2172,7 +2178,7 @@ func (r *ShopPurchase) Create(ctx context.Context, item *domain.ShopPurchase) er
                 <span class="cov0" title="0">return convErr</span>
         }
 
-        <span class="cov0" title="0">return nil</span>
+        <span class="cov8" title="1">return nil</span>
 }
 
 type ShopPurchaseAggrInventoryItem struct {

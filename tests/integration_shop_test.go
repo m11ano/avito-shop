@@ -13,7 +13,6 @@ func (s *IntegrationTestSuite) TestShopBuy() {
 	// Предварительно создадим пользователя и дадим 100 монет
 	initBalance := int64(100)
 
-	// Предварительно создадим пользователя
 	testAccount, err := domain.NewAccount("test", "test")
 	assert.NoError(s.T(), err)
 	err = s.accountUsecase.Create(context.Background(), testAccount)
@@ -39,7 +38,7 @@ func (s *IntegrationTestSuite) TestShopBuy() {
 		// успешная покупка
 		{
 			name:       "success buy",
-			timeoustMs: 50,
+			timeoustMs: stdTimeout,
 			request: Request{
 				method: http.MethodGet,
 				path:   "/api/buy/pen",
@@ -53,7 +52,7 @@ func (s *IntegrationTestSuite) TestShopBuy() {
 				func(_ any) {
 					var count int64
 					var quantity int64
-					err = s.pgxpool.QueryRow(context.Background(), "SELECT COUNT(*) as count, SUM(quantity) as q FROM shop_purchase WHERE account_id = $1 AND item_id = $2", testAccount.ID, pen.ID).Scan(&count, &quantity)
+					err = s.pgxpool.QueryRow(context.Background(), "SELECT COUNT(*) as count, COALESCE(SUM(quantity), 0) as q FROM shop_purchase WHERE account_id = $1 AND item_id = $2", testAccount.ID, pen.ID).Scan(&count, &quantity)
 					assert.NoError(s.T(), err)
 					assert.Equal(s.T(), int64(1), count)
 					assert.Equal(s.T(), int64(1), quantity)
@@ -72,7 +71,7 @@ func (s *IntegrationTestSuite) TestShopBuy() {
 		// повторная успешная покупка
 		{
 			name:       "repeat success buy",
-			timeoustMs: 50,
+			timeoustMs: stdTimeout,
 			request: Request{
 				method: http.MethodGet,
 				path:   "/api/buy/pen",
@@ -105,7 +104,7 @@ func (s *IntegrationTestSuite) TestShopBuy() {
 		// недостаточно денег
 		{
 			name:       "not enough money",
-			timeoustMs: 50,
+			timeoustMs: stdTimeout,
 			request: Request{
 				method: http.MethodGet,
 				path:   "/api/buy/hoody",

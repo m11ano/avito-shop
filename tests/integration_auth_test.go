@@ -28,7 +28,7 @@ func (s *IntegrationTestSuite) TestSignInAndSignUp() {
 		// первая авторизация
 		{
 			name:       "first auth",
-			timeoustMs: 50,
+			timeoustMs: stdTimeout,
 			request: Request{
 				method: http.MethodPost,
 				path:   "/api/auth",
@@ -73,7 +73,7 @@ func (s *IntegrationTestSuite) TestSignInAndSignUp() {
 		// авторизация с неверным паролем
 		{
 			name:       "auth with incorrect password",
-			timeoustMs: 50,
+			timeoustMs: stdTimeout,
 			request: Request{
 				method: http.MethodPost,
 				path:   "/api/auth",

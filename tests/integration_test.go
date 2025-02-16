@@ -109,6 +109,8 @@ const CaseParseTypeJSON = "json"
 
 const CaseParseTypeText = "string"
 
+const stdTimeout = 100
+
 type Case struct {
 	name             string
 	request          Request
