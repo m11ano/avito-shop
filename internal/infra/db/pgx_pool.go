@@ -10,8 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// PgxPool описывает методы из структуры pgxpool.Pool,
-// которые вы хотите использовать (и мокировать) в тестах.
 type PgxPool interface {
 	Acquire(ctx context.Context) (*pgxpool.Conn, error)
 	AcquireAllIdle(ctx context.Context) []*pgxpool.Conn

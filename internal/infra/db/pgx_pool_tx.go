@@ -8,8 +8,6 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-// PoolTxInterface повторяет методы структуры Tx.
-// Именно его мы будем мокировать через mockery.
 type PoolTxInterface interface {
 	Begin(ctx context.Context) (pgx.Tx, error)
 	Commit(ctx context.Context) error
